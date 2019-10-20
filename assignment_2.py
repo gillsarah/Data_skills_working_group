@@ -236,7 +236,7 @@ s3 = CA_energy_use['Value']
 s4 = CA_energy_use['Consumption']
 
 # Create axes
-fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4))
+fig, (ax1, ax2) = plt.subplots(4,1)
 ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b')
 ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen')
 
