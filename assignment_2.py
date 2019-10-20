@@ -3,10 +3,11 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
+import itertools #new package downloaded
 
 #chose where to save the data (PATH) and the plots (save_plots_path)
-PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
-#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
+#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
 save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 #Talk to 
@@ -15,6 +16,12 @@ os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 STATE_LIST = [('k-','Illinois'), ('r-','California'), 
               ('b-', 'New York'), ('g-','Texas')]
 
+
+months = (1, 8)
+states = range(1, 49)
+base_url = 'https://www.ncdc.noaa.gov/cag/statewide/time-series/{}-tavg-1-{}-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000'
+energy_url = 'https://www.eia.gov/electricity/data/state/annual_consumption_state.xls'
+'''
 def build_urls():
     urls = []
     temp_list = list(range(1,49))
@@ -23,17 +30,64 @@ def build_urls():
         urls.append('https://www.ncdc.noaa.gov/cag/statewide/time-series/'+state_number+'-tavg-1-1-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000')
         urls.append('https://www.ncdc.noaa.gov/cag/statewide/time-series/'+state_number+'-tavg-1-8-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000' )
     return urls
+'''
 
+#call
+#urls = build_urls() 
 #url = 'https://www.ncdc.noaa.gov/cag/statewide/time-series/1-tavg-1-1-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000'
+def build_url(st, mo, base):
+    return base.format(st, mo)
+
+urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
+urls.append(energy_url)
 
 def download_data(url):
     response = requests.get(url)
+    if url.endswith('.xls'):
+        with open(os.path.join(PATH, 'energy'), 'wb') as ofile:
+            ofile.write(response.text)
 
-    state, measure, month = response.text.split('\n')[0].split(', ')
+    else:
+        state, measure, month = response.text.split('\n')[0].split(', ')
 
-    with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+    with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile:
         ofile.write(response.text)
+
+def download_data(url, filename):
+    response = requests.get(url)
+    if filename.endswith('.xls'):
+        open_as = 'wb'
+        output = response.content
+download_data(energy_url, 'energy')
+
+#download toggle  -not working anymore
+if len(os.listdir(PATH)) >=len(urls):
+    pass
+    #print('got it')
+else:
+    print('some files are missing: downloading weather data now')
+    for url in urls:
+        download_data(url)
+    #Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
+download_data(energy_url)
+
+'''
 #can't get it to work unless I have the working directory point to the already created folder!
+def download_data(url, filename):
+    response = requests.get(url)
+    if filename.endswith('.csv'):
+        open_as = 'w'
+        output = response.text
+        #return open_as
+    elif filename.endswith('.xls'):
+        open_as = 'wb'
+        output = response.content
+        #return open_as
+    else:
+        return 'unexpected file type in download_data'
+'''
+
+weather_data = os.listdir(os.path.join(PATH))   
 
 #currenlty only accomodates csv form data
 def read_df(path):
@@ -45,6 +99,48 @@ def read_df(path):
         return df
     else:
         print('unexpected file type in folder')
+
+#call
+read_df(PATH)
+
+def read_weather(path):
+    df_contents = []
+    for filepath in os.listdir(b_path):
+        data = read_df(filepath)
+        df_contents.append(data)
+    
+    df = pd.concat(df_contents)
+    df = df.sort_values(['State', 'Date']) 
+    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
+
+    return df
+
+df = read_weather(PATH)
+
+def df_maker():
+    df_contents = []
+    for filepath in os.listdir(PATH):
+        data = read_df(filepath)
+        df_contents.append(data)
+    
+    df = pd.concat(df_contents)
+    df = df.sort_values(['State', 'Date']) 
+    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
+    return df
+'''
+def load_data():
+    dfs = []
+    for f in weather_data:
+        st, month = f.split('_')
+        df = pd.read_csv(os.path.join(PATH, 'weather', f), skiprows=4)
+        df['State'] = st
+        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
+        dfs.append(df)
+
+    df = pd.concat(dfs)
+    df = df.sort_values(['State', 'Date'])
+    return df
+'''
 
 #output is a df of the temperature difference between jan and aug for one state 
 def jan_aug_diff(df, state_string):
@@ -96,25 +192,9 @@ def summary_stats(df, STATE_LIST):
         print('Max/Mean/Min for '+label+':', state['Value'].max(), state['Value'].mean(), state['Value'].min())
 
 def main():
-    urls = build_urls()
-    #download toggle 
-    if len(os.listdir(PATH)) >=len(urls):
-        pass
-        #print('got it')
-    else:
-        print('some files are missing: downloading weather data now')
-        for url in urls:
-            download_data(url)
-    #Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
     
-    df_contents = []
-    for filepath in os.listdir(PATH):
-        data = read_df(filepath)
-        df_contents.append(data)
+
     
-    df = pd.concat(df_contents)
-    df = df.sort_values(['State', 'Date']) 
-    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
 
     jan_aug_diff_plot(df, STATE_LIST)
     aug_temp_plot(df, STATE_LIST)
