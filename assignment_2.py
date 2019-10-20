@@ -1,4 +1,5 @@
 import os
+import us 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -52,13 +53,15 @@ def download_data(url):
 
     with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile:
         ofile.write(response.text)
+download_data(energy_url)
 
 def download_data(url, filename):
     response = requests.get(url)
     if filename.endswith('.xls'):
         open_as = 'wb'
         output = response.content
-download_data(energy_url, 'energy')
+
+download_data(energy_url, 'energy.xls')
 
 #download toggle  -not working anymore
 if len(os.listdir(PATH)) >=len(urls):
@@ -105,7 +108,7 @@ read_df(PATH)
 
 def read_weather(path):
     df_contents = []
-    for filepath in os.listdir(b_path):
+    for filepath in os.listdir(path):
         data = read_df(filepath)
         df_contents.append(data)
     
@@ -117,6 +120,34 @@ def read_weather(path):
 
 df = read_weather(PATH)
 
+def load_energy(path, filename):
+    df = pd.read_excel(os.path.join(path, filename), skiprows = 1, na_values = '.')
+    #cite https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html 
+    df = pd.DataFrame(df)
+
+    df = df.rename(index=str, columns={'STATE':'St_Abbr',
+                                       'CONSUMPTION for ELECTRICITY':'Consumption'})
+    
+    df['Year'] = pd.to_datetime(df['YEAR'], format='%Y').map(lambda d: d.year)
+    
+    xwalk = us.states.mapping('abbr', 'name')
+    df['State'] = df['St_Abbr'].map(xwalk)
+    #code reference: https://stackoverflow.com/questions/40814187/map-us-state-name-to-two-letter-acronyms-that-was-given-in-dictionary-separately
+    
+    df = df.drop(df[df['TYPE OF PRODUCER'] != 'Total Electric Power Industry'].index)
+    #df = df.drop(df[df['Consumption'] == "."].index)
+    df = df.dropna(axis=0)
+    df = df.drop(['YEAR', 'St_Abbr', 'TYPE OF PRODUCER', 'ENERGY SOURCE              (UNITS)'], axis=1)
+    
+    df = pd.DataFrame(df.groupby(['State', 'Year'])['Consumption'].sum()).reset_index()
+    #code reference: https://stackoverflow.com/questions/40553002/pandas-group-by-two-columns-to-get-sum-of-another-column
+    #code reference: https://stackoverflow.com/questions/10373660/converting-a-pandas-groupby-output-from-series-to-dataframe
+
+    return df
+
+energy_df = load_energy(PATH, 'Energy_use.xls')
+
+'''
 def df_maker():
     df_contents = []
     for filepath in os.listdir(PATH):
@@ -127,6 +158,7 @@ def df_maker():
     df = df.sort_values(['State', 'Date']) 
     df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
     return df
+'''
 '''
 def load_data():
     dfs = []
@@ -170,11 +202,24 @@ def jan_aug_diff_plot(df,STATE_LIST):
     #cite: https://stackoverflow.com/questions/14880192/iterate-a-list-of-tuples
 
 #output is a df of one state for one month (e.g. IL for Aug of each year)
+#not useing this
 def state_month_df(df, month_number, state_string):
     df['Month'] = df['Date'].map(lambda d: d.month)
-    df_aug = df[df['Month'] == month_number]
-    state = df_aug[df_aug['State'] == state_string]
+    df_month = df[df['Month'] == month_number]
+    state = df_month[df_month['State'] == state_string]
     return state
+
+#useing this
+def month_df(df, month_number):
+    df['Month'] = df['Date'].map(lambda d: d.month)
+    df_month = df[df['Month'] == month_number]
+    #state = df_month[df_month['State'] == state_string]
+    return df_month
+
+df_jan = month_df(df, 1)
+df_aug = month_df(df, 8)
+
+
 
 def aug_temp_plot(df, STATE_LIST):
     fig, ax = plt.subplots(1, 1)
