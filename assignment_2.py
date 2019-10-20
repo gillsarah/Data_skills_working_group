@@ -118,7 +118,7 @@ def read_weather(path):
 
     return df
 
-df = read_weather(PATH)
+weather_df = read_weather(PATH)
 
 def load_energy(path, filename):
     df = pd.read_excel(os.path.join(path, filename), skiprows = 1, na_values = '.')
@@ -196,10 +196,101 @@ def jan_aug_diff_plot(df,STATE_LIST):
     ax[2].set_label('') #ledgend lable
     ax[2].set_xticks([]) #removes the label of x-axis
     ax[2].xaxis.set_ticks_position('none') #removes the ticks on x-axis
-    plt.suptitle('Average Jan-Aug Temperature Variation')
-    plt.savefig(save_plots_path+'/Jan-Aug_Variation.png')
+    #plt.suptitle('Average Jan-Aug Temperature Variation')
+    #plt.savefig(save_plots_path+'/Jan-Aug_Variation.png')
     plt.show()  
     #cite: https://stackoverflow.com/questions/14880192/iterate-a-list-of-tuples
+
+month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+
+fig, ax = plt.subplots()
+ax2 = ax.twinx()
+plt.show()
+
+for index, (color, label) in enumerate(STATE_LIST):
+        #print(index,color, label)
+    state = jan_aug_diff(df, label)
+    ax[index].plot(state['Year'], state['Jan-Aug Delta'], color)
+    ax[index].set_ylabel(label) 
+
+    plt.show()
+
+#stack overflow 
+def two_scales(ax1, axis, data1, data2, c1, c2):
+    ax2 = ax1.twinx()
+    ax1.plot(axis, data1, color=c1)
+    ax1.set_xlabel('Year')
+    ax1.set_ylabel('Average August Temp')
+    ax2.plot(axis, data2, color=c2)
+    ax2.set_ylabel('Energy Use')
+    return ax1, ax2
+
+# Create some mock data
+state_energy_use = jan_merged_df[jan_merged_df['State'] == 'Alabama']
+t = state_energy_use['Year']
+s1 = state_energy_use['Value']
+s2 = state_energy_use['Consumption']
+CA_energy_use = jan_merged_df[jan_merged_df['State'] == 'California']
+p = CA_energy_use['Year']
+s3 = CA_energy_use['Value']
+s4 = CA_energy_use['Consumption']
+
+# Create axes
+fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4))
+ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b')
+ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen')
+
+# Change color of each axis
+def color_y_axis(ax, color):
+    """Color your axes."""
+    for t in ax.get_yticklabels():
+        t.set_color(color)
+
+color_y_axis(ax1, 'r')
+color_y_axis(ax1a, 'b')
+color_y_axis(ax2, 'gold')
+color_y_axis(ax2a, 'limegreen')
+
+plt.tight_layout()
+plt.show()
+#cite:https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
+
+state_energy_use = energy_df[energy_df['State'] == 'Alabama']
+plt.bar(state_energy_use['Consumption'])
+plt.show() 
+
+#working 
+def plot_weather_energy(df, states):
+    fig, ax = plt.subplots(len(states), 1)
+    
+    colors = ['k-', 'r-', 'b-', 'g-']
+
+    for i, st in enumerate(states):
+        ax2[i]=ax[i].twinx()
+        
+        d = df[df['State'] == st]
+        ax[i].plot(d['Year'], d['Consumption'], colors[i])
+        ax2[i].plot(d['Year'], d['Value'], colors[i])
+        ax[i].set_ylabel(st)
+
+        if i == 0:
+            ax[i].xaxis.tick_top()
+        elif i == len(states)-1:
+            pass
+        else:
+            ax[i].set_label('')
+            ax[i].set_xticks([])
+            ax[i].xaxis.set_ticks_position('none')
+
+    plt.suptitle('Annual Energy Consumption by State')
+    #plt.savefig(os.path.join(PATH, 'jan_consumption.png'))
+    plt.show()
+
+states = ['California', 'Illinois', 'New York', 'Texas']
+plot_weather_energy(jan_merged, states)
+
+
+
 
 #output is a df of one state for one month (e.g. IL for Aug of each year)
 #not useing this
@@ -216,20 +307,39 @@ def month_df(df, month_number):
     #state = df_month[df_month['State'] == state_string]
     return df_month
 
-df_jan = month_df(df, 1)
-df_aug = month_df(df, 8)
+df_jan = month_df(weather_df, 1)
+df_aug = month_df(weather_df, 8)
+
+'''
+def make_modern(weather_df):
+    modern_weather = pd.DataFrame(weather_df.drop(weather_df[weather_df['Year'] < 1990].index))
+    return modern_weather
+#call
+df_new_jan = make_modern(df_jan)
+
+#modern_weather = pd.DataFrame(weather_df.drop(weather_df[weather_df['Year'] < 1990].index))
+#modern_grouped = modern_weather.groupby(['Date', pd.Grouper(freq='m')])
+'''
+
+#inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
+jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
+aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
 
 
 
-def aug_temp_plot(df, STATE_LIST):
+
+
+#will use this one
+def month_temp_plot(df, month_num, month_name, STATE_LIST):
     fig, ax = plt.subplots(1, 1)
     for color, label in STATE_LIST:
-        state = state_month_df(df, 8, label)
+        state = state_month_df(df, month_num, label)
         ax.plot(state['Year'], state['Value'], color, label = label)
     ax.legend(loc='upper right')
-    plt.suptitle('Average August Temperature')
+    plt.suptitle('Average '+ month_name + ' Temperature')
     plt.savefig(save_plots_path+'/Aug_Temp.png')
     plt.show()
+
 
 def summary_stats(df, STATE_LIST):
     for color, label in STATE_LIST:
@@ -242,7 +352,8 @@ def main():
     
 
     jan_aug_diff_plot(df, STATE_LIST)
-    aug_temp_plot(df, STATE_LIST)
+    month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+    #month_temp_plot(df, 1, STATE_LIST)
     summary_stats(df, STATE_LIST) 
 
 
