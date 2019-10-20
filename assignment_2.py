@@ -236,9 +236,19 @@ s3 = CA_energy_use['Value']
 s4 = CA_energy_use['Consumption']
 
 # Create axes
-fig, (ax1, ax2) = plt.subplots(4,1)
+fig, ([ax1, ax2], [ax3, ax4]) = plt.subplots(2,2)
 ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b')
 ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen')
+ax3, ax3a = two_scales(ax3, p, s3, s4, 'gold', 'limegreen')
+ax4, ax4a = two_scales(ax4, p, s3, s4, 'gold', 'limegreen')
+ax1.xaxis.tick_top()
+ax2.set_label('')
+ax2.set_xticks([])
+ax2.xaxis.set_ticks_position('none')
+ax3.set_label('') #ledgend lable
+ax3.set_xticks([]) #removes the label of x-axis
+ax3.xaxis.set_ticks_position('none')
+
 
 # Change color of each axis
 def color_y_axis(ax, color):
@@ -255,9 +265,17 @@ plt.tight_layout()
 plt.show()
 #cite:https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
 
+
+
+
+
 state_energy_use = energy_df[energy_df['State'] == 'Alabama']
 plt.bar(state_energy_use['Consumption'])
 plt.show() 
+
+
+
+
 
 #working 
 def plot_weather_energy(df, states):
