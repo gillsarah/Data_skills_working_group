@@ -17,8 +17,9 @@ os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 #STATE_LIST = [('k-','Illinois'), ('r-','California'), 
 #              ('b-', 'New York'), ('g-','Texas')]
 
+#chose 4 states to plot and the colors for their lines.
 STATE_LIST = [('k','Illinois'), ('r','California'), 
-              ('b', 'New York'), ('g','Texas')]
+              ('b', 'New York'), ('darkgreen','Texas')]
 
 months = (1, 8)
 states = range(1, 49)
@@ -176,6 +177,7 @@ def load_data():
     return df
 '''
 
+'''
 #output is a df of the temperature difference between jan and aug for one state 
 def jan_aug_diff(df, state_string):
     #df['Year'] = df['Date'].map(lambda d: d.year)
@@ -202,20 +204,35 @@ def jan_aug_diff_plot(df,STATE_LIST):
     #plt.savefig(save_plots_path+'/Jan-Aug_Variation.png')
     plt.show()  
     #cite: https://stackoverflow.com/questions/14880192/iterate-a-list-of-tuples
+'''
 
-month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+def plot_multi_state(df, states):
+    df['Jan-Aug Delta'] = df.groupby(['State', 'Year'])['Value'].diff()
+    df_delta = df.dropna(subset=['Jan-Aug Delta'])[['State', 'Year', 'Jan-Aug Delta']]
 
-fig, ax = plt.subplots()
-ax2 = ax.twinx()
-plt.show()
+    fig, ax = plt.subplots(len(states), 1)
+    
+    for i, (color, label) in enumerate(states):
+        d = df_delta[df_delta['State'] == label]
+        ax[i].plot(d['Year'], d['Jan-Aug Delta'], color)
+        ax[i].set_ylabel(label)
 
-for index, (color, label) in enumerate(STATE_LIST):
-        #print(index,color, label)
-    state = jan_aug_diff(df, label)
-    ax[index].plot(state['Year'], state['Jan-Aug Delta'], color)
-    ax[index].set_ylabel(label) 
+        if i == 0:
+            ax[i].xaxis.tick_top()
+        elif i == len(states)-1:
+            pass
+        else:
+            ax[i].set_label('')
+            ax[i].set_xticks([])
+            ax[i].xaxis.set_ticks_position('none')
 
+    plt.suptitle('Average Jan-Aug Temperature Variation')
+    plt.savefig(os.path.join(PATH, 'Jan_Aug_Temp_Delta.png'))
     plt.show()
+
+#call
+plot_multi_state(weather_df, STATE_LIST)
+
 
 #stack overflow 
 #need to get the ledend working!
@@ -244,7 +261,7 @@ def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
 #works
 def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
     fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
-    weather_colors = ['k', 'r', 'b', 'darkgreen']
+    #weather_colors = ['k', 'r', 'b', 'darkgreen']
     energy_colors = ['tab:blue','gold', 'c', 'cornflowerblue']
     #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
     for index, (color, label) in enumerate(STATE_LIST):
@@ -258,7 +275,7 @@ def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
         ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
                 jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
                 jan_merged_df[jan_merged_df['State'] == label]['Value'],
-                energy_colors[index], weather_colors[index],label, month_string)
+                energy_colors[index], color,label, month_string)
     plt.tight_layout()
     plt.savefig(save_plots_path+'/'+month_string+'Energy_temp_plot.png')
     plt.show()  
@@ -267,7 +284,7 @@ temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
 temp_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
 
 
- '''   
+'''   
 state_energy_use = jan_merged_df[jan_merged_df['State'] == 'Alabama']
 t = state_energy_use['Year']
 s1 = state_energy_use['Value']
@@ -293,7 +310,7 @@ ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b', 'Alabama')
 ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen', 'California')
 ax3, ax3a = two_scales(ax3, p, s3, s4, 'gold', 'limegreen', 'a')
 ax4, ax4a = two_scales(ax4, p, s3, s4, 'gold', 'limegreen', 'b')
-'''
+
 #works!
 fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2)
 ax[0] = two_scales(ax[0], t, s1, s2, 'r', 'b', 'Alabama')
@@ -302,7 +319,7 @@ ax[2]= two_scales(ax[2], p, s3, s4, 'gold', 'limegreen', 'a')
 ax[3]= two_scales(ax[3], p, s3, s4, 'gold', 'limegreen', 'b')
 plt.tight_layout()
 plt.show()
-
+'''
 #ax1.xaxis.tick_top()
 #ax2.set_label('')
 #ax2.set_xticks([])
@@ -339,6 +356,7 @@ plt.show()
 
 
 #working 
+'''
 def plot_weather_energy(df, states):
     fig, ax = plt.subplots(len(states), 1)
     
@@ -367,10 +385,10 @@ def plot_weather_energy(df, states):
 
 states = ['California', 'Illinois', 'New York', 'Texas']
 plot_weather_energy(jan_merged, states)
+'''
 
 
-
-
+'''
 #output is a df of one state for one month (e.g. IL for Aug of each year)
 #not useing this
 def state_month_df(df, month_number, state_string):
@@ -378,6 +396,7 @@ def state_month_df(df, month_number, state_string):
     df_month = df[df['Month'] == month_number]
     state = df_month[df_month['State'] == state_string]
     return state
+'''
 
 #useing this
 def month_df(df, month_number):
@@ -397,9 +416,9 @@ aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner')
 #cite https://stackoverflow.com/questions/41815079/pandas-merge-join-two-data-frames-on-multiple-columns
 
 
-aug_CA_merged_df = df_aug_CA.merge(energy_df, on=['State','Year'], how = 'inner') 
+#aug_CA_merged_df = df_aug_CA.merge(energy_df, on=['State','Year'], how = 'inner') 
 
-aug_CA_merged_df.head()
+#aug_CA_merged_df.head()
 '''
 def make_modern(weather_df):
     modern_weather = pd.DataFrame(weather_df.drop(weather_df[weather_df['Year'] < 1990].index))
@@ -428,17 +447,30 @@ def month_temp_plot(df, month_num, month_name, STATE_LIST):
     plt.show()
 
 
-def summary_stats(df, STATE_LIST):
+def summary_stats(df, STATE_LIST, month_num):
     for color, label in STATE_LIST:
-        state = state_month_df(df, 8, label)
+        df_month = month_df(df, month_num)
+        state = df_month[df_month['State'] == label]
+        #state = state_month_df(df, 8, label)
         print('Max/Mean/Min for '+label+':', state['Value'].max(), state['Value'].mean(), state['Value'].min())
 
+#working
+def summary_stats(df, STATE_LIST, month_num, colum_name, quiry):
+    for color, label in STATE_LIST:
+        df_month = month_df(df, month_num)
+        state = df_month[df_month['State'] == label]
+        #state = state_month_df(df, 8, label)
+        print('Max/Mean/Min '+ quiry + ' for ' +label+':', state[colum_name].max(), state[colum_name].mean(), state[colum_name].min())
+
+
+#call
+summary_stats(weather_df, STATE_LIST, 8, 'Value', 'August Temperature')
+summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
+
+
+
 def main():
-    
-
-    
-
-    jan_aug_diff_plot(df, STATE_LIST)
+    #jan_aug_diff_plot(df, STATE_LIST)
     month_temp_plot(weather_df, 8, 'August', STATE_LIST)
     #month_temp_plot(df, 1, STATE_LIST)
     summary_stats(df, STATE_LIST) 
