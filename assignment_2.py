@@ -4,7 +4,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
-import itertools #new package downloaded
+from matplotlib.ticker import FormatStrFormatter  #just need it if we want to fomat the y-axis
+import itertools 
 import numpy as np 
 
 #chose where to save the data (PATH) and the plots (save_plots_path)
@@ -127,11 +128,11 @@ def read_df(path):
         print('unexpected file type in folder')
 
 #call
-read_df(PATH)
+#read_df(PATH)
 
 def read_weather(path):
     df_contents = []
-    for filepath in os.listdir(path):
+    for filepath in os.listdir(path): #in weather_data
         data = read_df(filepath)
         df_contents.append(data)
     
@@ -141,6 +142,7 @@ def read_weather(path):
 
     return df
 
+#call
 weather_df = read_weather(PATH)
 
 def load_energy(path, filename):
