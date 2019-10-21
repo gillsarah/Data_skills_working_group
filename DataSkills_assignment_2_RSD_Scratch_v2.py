@@ -36,13 +36,13 @@ urls.append(energy_url)
 weather_data = os.listdir(os.path.join(PATH, 'weather'))
 
 
-def get_data(url): #check toggle
+def get_data(list):
     if len([f for f in weather_data]) == len(urls)-1:
         print('files have been downloaded')
     
     else:
         print('some files are missing: downloading data now')
-        for url in urls:
+        for url in list:
     
             if url.endswith('.xls'):
                 energy_response = requests.get(energy_url)
@@ -61,11 +61,11 @@ def get_data(url): #check toggle
     
 
 
-#see Sarah's read weather function - doesn't seem to have all functionality?
-'''
-def load_weather(PATH):
+assert(all([fname.endswith('.csv') for fname in weather_data])), 'Non-csv file type found in "weather" folder'
+
+def load_weather(path):
     dfs = []
-    for f in weather_data:
+    for f in path:
         st, month = f.split('_')
         df = pd.read_csv(os.path.join(PATH, 'weather', f), skiprows=4)
         df['State'] = st
@@ -78,20 +78,23 @@ def load_weather(PATH):
     df['Month'] = df['Date'].map(lambda d: d.month)
     
     return df
-'''
 
+
+
+'''
 def read_df(path):
-    if path.endswith('.csv'):
-        st, month = path.split('_')
-        df = pd.read_csv(os.path.join(path, 'weather'), skiprows = 4)
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
-        df['State'] = st
-        return df
-    else:
-        print('unexpected file type in folder')
+    for f in path:
+        if f.endswith('.csv'):
+            st, month = f.split('_')
+            df = pd.read_csv(os.path.join(path, 'weather'), skiprows = 4)
+            df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
+            df['State'] = st
+            return df
+        else:
+            print('unexpected file type in folder')
 
 #call
-read_df(r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon\weather')
+read_df(weather_data)
 
 def read_weather(path):
     df_contents = []
@@ -106,6 +109,7 @@ def read_weather(path):
     return df
 
 weather_df = read_weather(PATH)
+'''
 
 
 def load_energy(PATH, filename):
@@ -133,16 +137,16 @@ def load_energy(PATH, filename):
     return df
 
 
-weather_df = load_weather(os.path.join(PATH, 'weather'))
+
+weather_df = load_weather(weather_data)
 energy_df = load_energy(PATH, 'energy.xls')
 
 
 def month_df(df, month_number):
-    df = df[df['Month'] == month_number]
-    return df
+    df1 = df[df['Month'] == month_number]
+    return df1
 
 
-'''
 month_dfs = []
 for m in months: 
     df = month_df(weather_df, m)
@@ -151,14 +155,15 @@ for m in months:
 
 merged_month_dfs = []
 for df in month_dfs:
-    merged = emergy_df.merge(df, on['State', 'Year'], how='inner')
+    merged = energy_df.merge(df, on=['State', 'Year'], how='inner')
     merged_month_dfs.append(merged)    
+
+
+
 '''
-
-
-def merge_by_month(months):
+def merge_by_month(list):
     month_dfs = []
-    for m in months:
+    for m in list:
         df = month_df(weather_df, m)
         month_dfs.append(df)
     
@@ -168,8 +173,7 @@ def merge_by_month(months):
         merged_dfs.append(merged)
     
     return merged_dfs
-    
-energy_weather_dfs = merge_by_month(months)
+ '''
 
 
 
