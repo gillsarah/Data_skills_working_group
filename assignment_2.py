@@ -219,13 +219,17 @@ for index, (color, label) in enumerate(STATE_LIST):
 
 #stack overflow 
 #need to get the ledend working!
+#changed order of energy use and temp -so the line goes over the bar graph
 def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
     ax2 = ax1.twinx()
-    ax1.plot(axis, data1, color=c1, label = 'temp')
+    #ax1.plot(axis, data1, color=c1, label = 'temp')
+    ax1.bar(axis, data1, color=c1, label = 'temp')
     ax1.set_xlabel('Year')
-    ax1.set_ylabel('Average '+month+' Temp')
+    ax1.set_ylabel('Energy Use')
     ax2.plot(axis, data2, color=c2, label = 'energy')
-    ax2.set_ylabel('Energy Use')
+    #ax2.bar(axis, data2, color=c2, label = 'energy')
+    #ax[i].bar('Year', 'Consumption', data=d)
+    ax2.set_ylabel('Average '+month+' Temp')
     #ax1.legend(loc='upper right')
     #ax2.legend(loc='upper right')
     #plt.legend([ax1,ax2], ['first', 'second']) #doesn't work!
@@ -240,16 +244,23 @@ def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
 #works
 def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
     fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
-    weather_colors = ['k', 'r', 'b', 'g']
-    energy_colors = ['tab:blue','gold', 'c', 'tab:purple']
+    weather_colors = ['k', 'r', 'b', 'darkgreen']
+    energy_colors = ['tab:blue','gold', 'c', 'cornflowerblue']
     #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
     for index, (color, label) in enumerate(STATE_LIST):
         #print(index,color, label)#debug
+        '''
         ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
                 jan_merged_df[jan_merged_df['State'] == label]['Value'],
                 jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
                 weather_colors[index], energy_colors[index], label, month_string)
+        '''
+        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
+                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
+                jan_merged_df[jan_merged_df['State'] == label]['Value'],
+                energy_colors[index], weather_colors[index],label, month_string)
     plt.tight_layout()
+    plt.savefig(save_plots_path+'/'+month_string+'Energy_temp_plot.png')
     plt.show()  
 
 temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
@@ -302,6 +313,8 @@ plt.show()
 
 
 # Change color of each axis
+#can't use this anymore -can iether use this or be able to automiate axes numbering
+'''
 def color_y_axis(ax, color):
     """Color your axes."""
     for t in ax.get_yticklabels():
@@ -314,7 +327,9 @@ color_y_axis(ax2a, 'limegreen')
 
 plt.tight_layout()
 plt.show()
-#cite:https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
+'''
+#cite for graph:
+# https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
 
 
 
@@ -399,10 +414,13 @@ df_new_jan = make_modern(df_jan)
 
 
 #will use this one
+#updated to use month_df instead of state_month_df
 def month_temp_plot(df, month_num, month_name, STATE_LIST):
     fig, ax = plt.subplots(1, 1)
     for color, label in STATE_LIST:
-        state = state_month_df(df, month_num, label)
+        #state = state_month_df(df, month_num, label)
+        df_month = month_df(df, month_num)
+        state = df_month[df_month['State'] == label]
         ax.plot(state['Year'], state['Value'], color, label = label)
     ax.legend(loc='upper right')
     plt.suptitle('Average '+ month_name + ' Temperature')
