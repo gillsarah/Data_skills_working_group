@@ -121,6 +121,11 @@ for m in months:
 #weather_df.to_csv(r'c:\users\rache\Desktop\weather_test.csv', index=False)
 #energy_df.to_csv(r'c:\users\rache\Desktop\energy_test.csv', index=False)
 
+def two_scales(ax1, data1, data2):
+    ax2 = ax1.twinx()
+    
+    ax1.plot(df['Year'], df['value'])
+
 
 def plot_weather_energy(df, states):
     fig, ax = plt.subplots(len(states), 1)
@@ -128,12 +133,11 @@ def plot_weather_energy(df, states):
     colors = ['k-', 'r-', 'b-', 'g-']
 
     for i, st in enumerate(states):
-        ax2[i]=ax[i].twinx()
-        
         d = df[df['State'] == st]
-        ax[i].plot(d['Year'], d['Consumption'], colors[i])
-        ax2[i].plot(d['Year'], d['Value'], colors[i])
+        ax[i].bar('Year', 'Consumption', data=d)
+        ax[i].plot(d['Year'], d['Value'], colors[i])
         ax[i].set_ylabel(st)
+        
 
         if i == 0:
             ax[i].xaxis.tick_top()
