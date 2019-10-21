@@ -7,13 +7,19 @@ import matplotlib.pyplot as plt
 import itertools
 import datetime as dt
 
-do_downloads = False
-
 
 PATH = r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon'
 
+# Mac Paths:
+#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
+#save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+#os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 
-months = (1, 8)
+STATE_LIST = [('k','Illinois'), ('r','California'), 
+              ('b', 'New York'), ('darkgreen','Texas')]
+
+months = [1, 8]
 states = range(1, 49)
 base_url = 'https://www.ncdc.noaa.gov/cag/statewide/time-series/{}-tavg-1-{}-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000'
 energy_url = 'https://www.eia.gov/electricity/data/state/annual_consumption_state.xls'
@@ -27,35 +33,38 @@ urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, mont
 urls.append(energy_url)
 
 
-def get_page(url):
-    if url.endswith('.xls'):
-        energy_response = requests.get(energy_url)
-        
-        with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
-            output.write(energy_response.content)
-        #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
-    
-    else:   
-        weather_response = requests.get(url)
-
-        state, measure, month = weather_response.text.split('\n')[0].split(', ')
-   
-        with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
-            ofile.write(weather_response.text)
-    
-    
-
-if do_downloads:
-    for url in urls:
-        get_page(url)
-    
-
-
 weather_data = os.listdir(os.path.join(PATH, 'weather'))
 
 
-#see Sarah's read weather function
-def load_weather():
+def get_page(url): #check toggle
+    if len([f for f in weather_data])+1 == len([s for s in urls]):
+        print('files have been downloaded')
+    
+    else:
+        print('some files are missing: downloading data now')
+        for url in weather_urls:
+            get_page(url)
+    
+        if url.endswith('.xls'):
+            energy_response = requests.get(energy_url)
+        
+            with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
+                output.write(energy_response.content)
+                #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
+    
+        else:   
+            weather_response = requests.get(url)
+
+            state, measure, month = weather_response.text.split('\n')[0].split(', ')
+   
+            with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+                ofile.write(weather_response.text)
+    
+
+
+
+#see Sarah's read weather function - doesn't seem to have all functionality?
+def load_weather(PATH):
     dfs = []
     for f in weather_data:
         st, month = f.split('_')
@@ -98,7 +107,7 @@ def load_energy(PATH, filename):
     return df
 
 
-weather_df = load_weather()
+weather_df = load_weather(os.path.join(PATH, 'weather'))
 energy_df = load_energy(PATH, 'energy.xls')
 
 
@@ -106,15 +115,35 @@ def month_df(df, month_number):
     df = df[df['Month'] == month_number]
     return df
 
-jan_df = month_df(weather_df, 1)
-aug_df = month_df(weather_df, 8)  
 
-jan_merged = energy_df.merge(jan_df, on=['State', 'Year'], how='inner') 
-aug_merged = energy_df.merge(aug_df, on=['State', 'Year'], how='inner')
+'''
+month_dfs = []
+for m in months: 
+    df = month_df(weather_df, m)
+    month_dfs.append(df)
 
-for m in months:
-    month+'_df' = month_df(modern_weather, month)
+
+merged_month_dfs = []
+for df in month_dfs:
+    merged = emergy_df.merge(df, on['State', 'Year'], how='inner')
+    merged_month_dfs.append(merged)    
+'''
+
+
+def merge_by_month(months):
+    month_dfs = []
+    for m in months:
+        df1 = month_df(weather_df, m)
+        month_dfs.append(df)
     
+    merged_dfs = []
+    for df in month_dfs:
+        merged = energy_df.merge(month_df, on['State', 'Year'], how='inner')
+        merged_month_dfs.append(merged)
+    
+    return merged_dfs
+    
+energy_weather_dfs = mergy_by_month(months)
 
 
 
