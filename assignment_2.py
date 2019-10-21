@@ -14,9 +14,11 @@ os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 #Talk to 
 
 #chose 4 states to plot
-STATE_LIST = [('k-','Illinois'), ('r-','California'), 
-              ('b-', 'New York'), ('g-','Texas')]
+#STATE_LIST = [('k-','Illinois'), ('r-','California'), 
+#              ('b-', 'New York'), ('g-','Texas')]
 
+STATE_LIST = [('k','Illinois'), ('r','California'), 
+              ('b', 'New York'), ('g','Texas')]
 
 months = (1, 8)
 states = range(1, 49)
@@ -216,38 +218,83 @@ for index, (color, label) in enumerate(STATE_LIST):
     plt.show()
 
 #stack overflow 
-def two_scales(ax1, axis, data1, data2, c1, c2):
+#need to get the ledend working!
+def two_scales(ax1, axis, data1, data2, c1, c2, state_string):
     ax2 = ax1.twinx()
-    ax1.plot(axis, data1, color=c1)
+    ax1.plot(axis, data1, color=c1, label = 'temp')
     ax1.set_xlabel('Year')
     ax1.set_ylabel('Average August Temp')
-    ax2.plot(axis, data2, color=c2)
+    ax2.plot(axis, data2, color=c2, label = 'energy')
     ax2.set_ylabel('Energy Use')
+    #ax1.legend(loc='upper right')
+    #ax2.legend(loc='upper right')
+    #plt.legend([ax1,ax2], ['first', 'second']) #doesn't work!
+    #cite:https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
+    plt.title(state_string)
     return ax1, ax2
 
-# Create some mock data
+#can't do histogram bc x-axis needs to be year for both and that is not how a hist works
+#ax2.plot(axis, data2, color=c2, label = 'energy')
+
+
+#works
+fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
+weather_colors = ['k', 'r', 'b', 'g']
+energy_colors = ['tab:blue','gold', 'c', 'tab:purple']
+#cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
+for index, (color, label) in enumerate(STATE_LIST):
+    #print(index,color, label)#debug
+    ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
+                jan_merged_df[jan_merged_df['State'] == label]['Value'],
+                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
+                weather_colors[index], energy_colors[index], label)
+plt.tight_layout()
+plt.show()  
+
+
+ '''   
 state_energy_use = jan_merged_df[jan_merged_df['State'] == 'Alabama']
 t = state_energy_use['Year']
 s1 = state_energy_use['Value']
 s2 = state_energy_use['Consumption']
-CA_energy_use = jan_merged_df[jan_merged_df['State'] == 'California']
+CA_energy_use = jan_merged_df[jan_merged_df['State'] == 'California']['Year']
 p = CA_energy_use['Year']
 s3 = CA_energy_use['Value']
 s4 = CA_energy_use['Consumption']
+'''
+
 
 # Create axes
+'''
 fig, ([ax1, ax2], [ax3, ax4]) = plt.subplots(2,2)
-ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b')
-ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen')
-ax3, ax3a = two_scales(ax3, p, s3, s4, 'gold', 'limegreen')
-ax4, ax4a = two_scales(ax4, p, s3, s4, 'gold', 'limegreen')
-ax1.xaxis.tick_top()
-ax2.set_label('')
-ax2.set_xticks([])
-ax2.xaxis.set_ticks_position('none')
-ax3.set_label('') #ledgend lable
-ax3.set_xticks([]) #removes the label of x-axis
-ax3.xaxis.set_ticks_position('none')
+ax1= two_scales(ax1, t, s1, s2, 'r', 'b', 'Alabama')
+ax2 = two_scales(ax2, p, s3, s4, 'gold', 'limegreen', 'California')
+ax3 = two_scales(ax3, p, s3, s4, 'gold', 'limegreen', 'a')
+ax4= two_scales(ax4, p, s3, s4, 'gold', 'limegreen', 'b')
+plt.show()
+
+fig, ([ax1, ax2], [ax3, ax4]) = plt.subplots(2,2)
+ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b', 'Alabama')
+ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen', 'California')
+ax3, ax3a = two_scales(ax3, p, s3, s4, 'gold', 'limegreen', 'a')
+ax4, ax4a = two_scales(ax4, p, s3, s4, 'gold', 'limegreen', 'b')
+'''
+#works!
+fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2)
+ax[0] = two_scales(ax[0], t, s1, s2, 'r', 'b', 'Alabama')
+ax[1] = two_scales(ax[1], p, s3, s4, 'gold', 'limegreen', 'California')
+ax[2]= two_scales(ax[2], p, s3, s4, 'gold', 'limegreen', 'a')
+ax[3]= two_scales(ax[3], p, s3, s4, 'gold', 'limegreen', 'b')
+plt.tight_layout()
+plt.show()
+
+#ax1.xaxis.tick_top()
+#ax2.set_label('')
+#ax2.set_xticks([])
+#ax2.xaxis.set_ticks_position('none')
+#ax3.set_label('') #ledgend lable
+#ax3.set_xticks([]) #removes the label of x-axis
+#ax3.xaxis.set_ticks_position('none')
 
 
 # Change color of each axis
@@ -267,11 +314,6 @@ plt.show()
 
 
 
-
-
-state_energy_use = energy_df[energy_df['State'] == 'Alabama']
-plt.bar(state_energy_use['Consumption'])
-plt.show() 
 
 
 
@@ -328,6 +370,15 @@ def month_df(df, month_number):
 df_jan = month_df(weather_df, 1)
 df_aug = month_df(weather_df, 8)
 
+df_aug_CA = state_month_df(weather_df, 8, 'California')
+
+#inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
+jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
+aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
+
+aug_CA_merged_df = df_aug_CA.merge(energy_df, on=['State','Year'], how = 'inner') 
+
+aug_CA_merged_df.head()
 '''
 def make_modern(weather_df):
     modern_weather = pd.DataFrame(weather_df.drop(weather_df[weather_df['Year'] < 1990].index))
@@ -338,12 +389,6 @@ df_new_jan = make_modern(df_jan)
 #modern_weather = pd.DataFrame(weather_df.drop(weather_df[weather_df['Year'] < 1990].index))
 #modern_grouped = modern_weather.groupby(['Date', pd.Grouper(freq='m')])
 '''
-
-#inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
-jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
-aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
-
-
 
 
 
