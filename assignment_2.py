@@ -219,11 +219,11 @@ for index, (color, label) in enumerate(STATE_LIST):
 
 #stack overflow 
 #need to get the ledend working!
-def two_scales(ax1, axis, data1, data2, c1, c2, state_string):
+def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
     ax2 = ax1.twinx()
     ax1.plot(axis, data1, color=c1, label = 'temp')
     ax1.set_xlabel('Year')
-    ax1.set_ylabel('Average August Temp')
+    ax1.set_ylabel('Average '+month+' Temp')
     ax2.plot(axis, data2, color=c2, label = 'energy')
     ax2.set_ylabel('Energy Use')
     #ax1.legend(loc='upper right')
@@ -238,18 +238,22 @@ def two_scales(ax1, axis, data1, data2, c1, c2, state_string):
 
 
 #works
-fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
-weather_colors = ['k', 'r', 'b', 'g']
-energy_colors = ['tab:blue','gold', 'c', 'tab:purple']
-#cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
-for index, (color, label) in enumerate(STATE_LIST):
-    #print(index,color, label)#debug
-    ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
+def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
+    fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
+    weather_colors = ['k', 'r', 'b', 'g']
+    energy_colors = ['tab:blue','gold', 'c', 'tab:purple']
+    #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
+    for index, (color, label) in enumerate(STATE_LIST):
+        #print(index,color, label)#debug
+        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
                 jan_merged_df[jan_merged_df['State'] == label]['Value'],
                 jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
-                weather_colors[index], energy_colors[index], label)
-plt.tight_layout()
-plt.show()  
+                weather_colors[index], energy_colors[index], label, month_string)
+    plt.tight_layout()
+    plt.show()  
+
+temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
+temp_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
 
 
  '''   
@@ -375,6 +379,8 @@ df_aug_CA = state_month_df(weather_df, 8, 'California')
 #inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
 jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
 aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
+#cite https://stackoverflow.com/questions/41815079/pandas-merge-join-two-data-frames-on-multiple-columns
+
 
 aug_CA_merged_df = df_aug_CA.merge(energy_df, on=['State','Year'], how = 'inner') 
 
