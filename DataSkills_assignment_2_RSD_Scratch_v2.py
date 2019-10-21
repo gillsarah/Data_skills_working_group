@@ -60,10 +60,9 @@ def get_data(url): #check toggle
                     ofile.write(weather_response.text)
     
 
-get_data(urls)
-
 
 #see Sarah's read weather function - doesn't seem to have all functionality?
+'''
 def load_weather(PATH):
     dfs = []
     for f in weather_data:
@@ -79,7 +78,34 @@ def load_weather(PATH):
     df['Month'] = df['Date'].map(lambda d: d.month)
     
     return df
+'''
 
+def read_df(path):
+    if path.endswith('.csv'):
+        st, month = path.split('_')
+        df = pd.read_csv(os.path.join(path, 'weather'), skiprows = 4)
+        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
+        df['State'] = st
+        return df
+    else:
+        print('unexpected file type in folder')
+
+#call
+read_df(r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon\weather')
+
+def read_weather(path):
+    df_contents = []
+    for filepath in os.listdir(path):
+        data = read_df(filepath)
+        df_contents.append(data)
+    
+    df = pd.concat(df_contents)
+    df = df.sort_values(['State', 'Date']) 
+    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
+
+    return df
+
+weather_df = read_weather(PATH)
 
 
 def load_energy(PATH, filename):
