@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import itertools #new package downloaded
+import numpy as np 
 
 #chose where to save the data (PATH) and the plots (save_plots_path)
 #PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
@@ -45,6 +46,36 @@ def build_url(st, mo, base):
 urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
 urls.append(energy_url)
 
+def get_page(url):
+    weather_response = requests.get(url)
+
+    try:
+        state, measure, month = weather_response.text.split('\n')[0].split(', ')
+    except ValueError:
+        print('Unexpected format from downloaded data: ', url)
+        raise
+
+    with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+        ofile.write(weather_response.text)
+
+#download toggle  -need to check
+if len(os.listdir(PATH)) >=len(urls):
+    #pass
+    print('got it')
+else:
+    print('some files are missing: downloading data now')
+    for url in weather_urls:
+        get_page(url)
+    
+    energy_response = requests.get(energy_url)
+    with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
+        output.write(energy_response.content)
+        #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
+
+#Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
+
+
+'''
 def download_data(url):
     response = requests.get(url)
     if url.endswith('.xls'):
@@ -66,18 +97,7 @@ def download_data(url, filename):
 
 download_data(energy_url, 'energy.xls')
 
-#download toggle  -not working anymore
-if len(os.listdir(PATH)) >=len(urls):
-    pass
-    #print('got it')
-else:
-    print('some files are missing: downloading weather data now')
-    for url in urls:
-        download_data(url)
-    #Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
-download_data(energy_url)
 
-'''
 #can't get it to work unless I have the working directory point to the already created folder!
 def download_data(url, filename):
     response = requests.get(url)
@@ -234,55 +254,6 @@ def plot_multi_state(df, states):
 plot_multi_state(weather_df, STATE_LIST)
 
 
-#stack overflow 
-#need to get the ledend working!
-#changed order of energy use and temp -so the line goes over the bar graph
-def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
-    ax2 = ax1.twinx()
-    #ax1.plot(axis, data1, color=c1, label = 'temp')
-    ax1.bar(axis, data1, color=c1, label = 'temp')
-    ax1.set_xlabel('Year')
-    ax1.set_ylabel('Energy Use')
-    ax2.plot(axis, data2, color=c2, label = 'energy')
-    #ax2.bar(axis, data2, color=c2, label = 'energy')
-    #ax[i].bar('Year', 'Consumption', data=d)
-    ax2.set_ylabel('Average '+month+' Temp')
-    #ax1.legend(loc='upper right')
-    #ax2.legend(loc='upper right')
-    #plt.legend([ax1,ax2], ['first', 'second']) #doesn't work!
-    #cite:https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
-    plt.title(state_string)
-    return ax1, ax2
-
-#can't do histogram bc x-axis needs to be year for both and that is not how a hist works
-#ax2.plot(axis, data2, color=c2, label = 'energy')
-
-
-#works
-def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
-    fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
-    #weather_colors = ['k', 'r', 'b', 'darkgreen']
-    energy_colors = ['tab:blue','gold', 'c', 'cornflowerblue']
-    #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
-    for index, (color, label) in enumerate(STATE_LIST):
-        #print(index,color, label)#debug
-        '''
-        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
-                jan_merged_df[jan_merged_df['State'] == label]['Value'],
-                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
-                weather_colors[index], energy_colors[index], label, month_string)
-        '''
-        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
-                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
-                jan_merged_df[jan_merged_df['State'] == label]['Value'],
-                energy_colors[index], color,label, month_string)
-    plt.tight_layout()
-    plt.savefig(save_plots_path+'/'+month_string+'Energy_temp_plot.png')
-    plt.show()  
-
-temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
-temp_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
-
 
 '''   
 state_energy_use = jan_merged_df[jan_merged_df['State'] == 'Alabama']
@@ -408,7 +379,7 @@ def month_df(df, month_number):
 df_jan = month_df(weather_df, 1)
 df_aug = month_df(weather_df, 8)
 
-df_aug_CA = state_month_df(weather_df, 8, 'California')
+#df_aug_CA = state_month_df(weather_df, 8, 'California')
 
 #inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
 jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
@@ -446,15 +417,15 @@ def month_temp_plot(df, month_num, month_name, STATE_LIST):
     plt.savefig(save_plots_path+'/Aug_Temp.png')
     plt.show()
 
-
+'''
 def summary_stats(df, STATE_LIST, month_num):
     for color, label in STATE_LIST:
         df_month = month_df(df, month_num)
         state = df_month[df_month['State'] == label]
         #state = state_month_df(df, 8, label)
         print('Max/Mean/Min for '+label+':', state['Value'].max(), state['Value'].mean(), state['Value'].min())
-
-#working
+'''
+#works
 def summary_stats(df, STATE_LIST, month_num, colum_name, quiry):
     for color, label in STATE_LIST:
         df_month = month_df(df, month_num)
@@ -467,8 +438,70 @@ def summary_stats(df, STATE_LIST, month_num, colum_name, quiry):
 summary_stats(weather_df, STATE_LIST, 8, 'Value', 'August Temperature')
 summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
 
+#stack overflow 
+#need to get the ledend working!
+#changed order of energy use and temp -so the line goes over the bar graph
+def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
+    ax2 = ax1.twinx()
+    #ax1.plot(axis, data1, color=c1, label = 'temp')
+    ax1.bar(axis, data1, color=c1, label = 'energy')
+    #ax1.set_xlabel('Year')
+    ax1.set_ylabel('Energy Use')
+    ax1.plot(np.NaN, color = c2, label='temp') #plot an empty line so that we can have a legend
+    ax1.yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+    #cite: https://stackoverflow.com/questions/29188757/matplotlib-specify-format-of-floats-for-tick-lables 
+    ax2.plot(axis, data2, color=c2, label = 'temp')
+    #ax2.bar(axis, data2, color=c2, label = 'energy')
+    #ax[i].bar('Year', 'Consumption', data=d)
+    #ax2.set_ylabel('Average '+month+' Temp')
+    ax2.set_ylabel('Average '+month+' Temp', rotation=270,labelpad=15)
+    #rotates the second axis lable 180 degrees from start (it is at 90 degrees by default)
+    #cite: https://stackoverflow.com/questions/27671748/how-to-print-y-axis-label-horizontally-in-a-matplotlib-pylab-chart 
+    #ax1.legend(loc='upper right')
+    ax1.legend(loc='upper right', bbox_to_anchor=(1,1))
+    #cite: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-out-of-the-plot 
+    #currently it is at default 1,1 but can move it around
+
+    plt.title(state_string)
+    return ax1, ax2
+
+#ymax = ax1.get_ylim()[1] #-> botom, top this just gives us the top
+#so this includes matplotlib's automatic padding
+
+#rotate axise lables 
+
+#can't do histogram bc x-axis needs to be year for both and that is not how a hist works
+#ax2.plot(axis, data2, color=c2, label = 'energy')
 
 
+#works
+def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
+    fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
+    #weather_colors = ['k', 'r', 'b', 'darkgreen']
+    energy_colors = ['tab:blue','gold', 'c', 'cornflowerblue']
+    #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
+    for index, (color, label) in enumerate(STATE_LIST):
+        #print(index,color, label)#debug
+        '''
+        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
+                jan_merged_df[jan_merged_df['State'] == label]['Value'],
+                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
+                weather_colors[index], energy_colors[index], label, month_string)
+        '''
+        ax[index] = two_scales(ax[index], jan_merged_df[jan_merged_df['State'] == label]['Year'],
+                jan_merged_df[jan_merged_df['State'] == label]['Consumption'],
+                jan_merged_df[jan_merged_df['State'] == label]['Value'],
+                energy_colors[index], color,label, month_string)
+    plt.tight_layout()
+    #plt.savefig(save_plots_path+'/'+month_string+'Energy_temp_plot.png')
+    plt.show()  
+
+temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
+temp_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
+
+
+#not in use
+'''
 def main():
     #jan_aug_diff_plot(df, STATE_LIST)
     month_temp_plot(weather_df, 8, 'August', STATE_LIST)
@@ -478,4 +511,5 @@ def main():
 
 #call
 main()
+'''
 
