@@ -16,7 +16,7 @@ PATH = r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon'
 #save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 #os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 
-STATE_LIST = [('k','Illinois'), ('r','California'), 
+State_List = [('k','Illinois'), ('r','California'), 
               ('b', 'New York'), ('darkgreen','Texas')]
 
 months = [1, 8]
@@ -36,31 +36,31 @@ urls.append(energy_url)
 weather_data = os.listdir(os.path.join(PATH, 'weather'))
 
 
-def get_page(url): #check toggle
-    if len([f for f in weather_data])+1 == len([s for s in urls]):
+def get_data(url): #check toggle
+    if len([f for f in weather_data]) == len(urls)-1:
         print('files have been downloaded')
     
     else:
         print('some files are missing: downloading data now')
-        for url in weather_urls:
-            get_page(url)
+        for url in urls:
     
-        if url.endswith('.xls'):
-            energy_response = requests.get(energy_url)
+            if url.endswith('.xls'):
+                energy_response = requests.get(energy_url)
         
-            with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
-                output.write(energy_response.content)
-                #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
+                with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
+                    output.write(energy_response.content)
+                    #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
     
-        else:   
-            weather_response = requests.get(url)
+            else:   
+                weather_response = requests.get(url)
 
-            state, measure, month = weather_response.text.split('\n')[0].split(', ')
+                state, measure, month = weather_response.text.split('\n')[0].split(', ')
    
-            with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
-                ofile.write(weather_response.text)
+                with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+                    ofile.write(weather_response.text)
     
 
+get_data(urls)
 
 
 #see Sarah's read weather function - doesn't seem to have all functionality?
@@ -133,17 +133,17 @@ for df in month_dfs:
 def merge_by_month(months):
     month_dfs = []
     for m in months:
-        df1 = month_df(weather_df, m)
+        df = month_df(weather_df, m)
         month_dfs.append(df)
     
     merged_dfs = []
     for df in month_dfs:
-        merged = energy_df.merge(month_df, on['State', 'Year'], how='inner')
-        merged_month_dfs.append(merged)
+        merged = energy_df.merge(month_df, on=['State', 'Year'], how='inner')
+        merged_dfs.append(merged)
     
     return merged_dfs
     
-energy_weather_dfs = mergy_by_month(months)
+energy_weather_dfs = merge_by_month(months)
 
 
 
