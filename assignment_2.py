@@ -13,114 +13,67 @@ import numpy as np
 PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
 save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
-#Talk to 
+#Talk to teck support 
 
-#chose 4 states to plot
-#STATE_LIST = [('k-','Illinois'), ('r-','California'), 
-#              ('b-', 'New York'), ('g-','Texas')]
 
 #chose 4 states to plot and the colors for their lines.
 STATE_LIST = [('k','Illinois'), ('r','California'), 
               ('b', 'New York'), ('darkgreen','Texas')]
 
-months = (1, 8)
+months = [1, 8]
 states = range(1, 49)
 base_url = 'https://www.ncdc.noaa.gov/cag/statewide/time-series/{}-tavg-1-{}-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000'
 energy_url = 'https://www.eia.gov/electricity/data/state/annual_consumption_state.xls'
-'''
-def build_urls():
-    urls = []
-    temp_list = list(range(1,49))
-    for state_number in temp_list:
-        state_number = str(state_number)
-        urls.append('https://www.ncdc.noaa.gov/cag/statewide/time-series/'+state_number+'-tavg-1-1-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000')
-        urls.append('https://www.ncdc.noaa.gov/cag/statewide/time-series/'+state_number+'-tavg-1-8-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000' )
-    return urls
-'''
 
-#call
-#urls = build_urls() 
-#url = 'https://www.ncdc.noaa.gov/cag/statewide/time-series/1-tavg-1-1-1895-2019.csv?base_prd=true&begbaseyear=1901&endbaseyear=2000'
+
 def build_url(st, mo, base):
     return base.format(st, mo)
 
+urls = []
 urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
 urls.append(energy_url)
 
-def get_page(url):
-    weather_response = requests.get(url)
 
-    try:
-        state, measure, month = weather_response.text.split('\n')[0].split(', ')
-    except ValueError:
-        print('Unexpected format from downloaded data: ', url)
-        raise
+weather_data = os.listdir(os.path.join(PATH, 'weather')) #PC
+#weather_data = os.listdir(os.path.join(PATH)) #mac
 
-    with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
-        ofile.write(weather_response.text)
 
-#download toggle  -need to check
-if len(os.listdir(PATH)) >=len(urls):
-    #pass
-    print('got it')
-else:
-    print('some files are missing: downloading data now')
-    for url in weather_urls:
-        get_page(url)
+def get_data(url): #check toggle
+    #if len([f for f in weather_data]) == len(urls)-1:
+        #print('files have been downloaded')
+    if len(weather_data) >=len(urls): #Sarah
+        print('files have been downloaded')
+    #Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
+    else:
+        print('some files are missing: downloading data now')
+        for url in urls:
     
-    energy_response = requests.get(energy_url)
-    with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
-        output.write(energy_response.content)
-        #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
+            if url.endswith('.xls'):
+                energy_response = requests.get(energy_url)
+        
+                with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
+                    output.write(energy_response.content)
+                    #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
+    
+            else:   
+                weather_response = requests.get(url)
 
-#Cite: https://stackoverflow.com/questions/49284015/how-to-check-if-folder-is-empty-with-python
-
-
-'''
-def download_data(url):
-    response = requests.get(url)
-    if url.endswith('.xls'):
-        with open(os.path.join(PATH, 'energy'), 'wb') as ofile:
-            ofile.write(response.text)
-
-    else:
-        state, measure, month = response.text.split('\n')[0].split(', ')
-
-    with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile:
-        ofile.write(response.text)
-download_data(energy_url)
-
-def download_data(url, filename):
-    response = requests.get(url)
-    if filename.endswith('.xls'):
-        open_as = 'wb'
-        output = response.content
-
-download_data(energy_url, 'energy.xls')
+                state, measure, month = weather_response.text.split('\n')[0].split(', ')
+   
+                #with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+                with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile: #mac
+                    ofile.write(weather_response.text)
 
 
-#can't get it to work unless I have the working directory point to the already created folder!
-def download_data(url, filename):
-    response = requests.get(url)
-    if filename.endswith('.csv'):
-        open_as = 'w'
-        output = response.text
-        #return open_as
-    elif filename.endswith('.xls'):
-        open_as = 'wb'
-        output = response.content
-        #return open_as
-    else:
-        return 'unexpected file type in download_data'
-'''
-
-weather_data = os.listdir(os.path.join(PATH))   
+#call
+get_data(urls) 
 
 #currenlty only accomodates csv form data
-def read_df(path):
-    if path.endswith('.csv'):
-        st, month = path.split('_')
-        df = pd.read_csv(os.path.join(path), skiprows = 4)
+def read_df(filename):
+    if filename.endswith('.csv'):
+        st, month = filename.split('_')
+        df = pd.read_csv(os.path.join(filename), skiprows = 4)
+        #df = pd.read_csv(os.path.join('weather', filename), skiprows = 4)
         df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
         df['State'] = st
         return df
@@ -128,13 +81,22 @@ def read_df(path):
         print('unexpected file type in folder')
 
 #call
-#read_df(PATH)
+read_df(PATH)
+df_contents = []
+for filepath in os.listdir(PATH): #in weather_data os.path.join(PATH, 'weather')
+    data = read_df(filepath)
+    df_contents.append(data)
 
 def read_weather(path):
     df_contents = []
-    for filepath in os.listdir(path): #in weather_data
+    '''
+    for filepath in os.listdir(path):
         data = read_df(filepath)
         df_contents.append(data)
+    '''
+    for filepath in os.listdir(path):
+        data = read_df(filepath)
+        df_contents.append(data)        
     
     df = pd.concat(df_contents)
     df = df.sort_values(['State', 'Date']) 
@@ -144,10 +106,16 @@ def read_weather(path):
 
 #call
 weather_df = read_weather(PATH)
+#weather_df.head()
+#weather_df.tail()
 
-def load_energy(path, filename):
-    df = pd.read_excel(os.path.join(path, filename), skiprows = 1, na_values = '.')
-    #cite https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html 
+'''
+os.listdir(os.path.join(PATH, 'weather'))
+weather_df = read_weather(os.path.join(PATH, 'weather'))
+read_weather(PATH)
+'''
+def load_energy(PATH, filename):
+    df = pd.read_excel(os.path.join(PATH, filename), skiprows=1)
     df = pd.DataFrame(df)
 
     df = df.rename(index=str, columns={'STATE':'St_Abbr',
@@ -160,17 +128,51 @@ def load_energy(path, filename):
     #code reference: https://stackoverflow.com/questions/40814187/map-us-state-name-to-two-letter-acronyms-that-was-given-in-dictionary-separately
     
     df = df.drop(df[df['TYPE OF PRODUCER'] != 'Total Electric Power Industry'].index)
-    #df = df.drop(df[df['Consumption'] == "."].index)
+    df = df.drop(df[df['Consumption'] == "."].index)
     df = df.dropna(axis=0)
     df = df.drop(['YEAR', 'St_Abbr', 'TYPE OF PRODUCER', 'ENERGY SOURCE              (UNITS)'], axis=1)
     
     df = pd.DataFrame(df.groupby(['State', 'Year'])['Consumption'].sum()).reset_index()
     #code reference: https://stackoverflow.com/questions/40553002/pandas-group-by-two-columns-to-get-sum-of-another-column
     #code reference: https://stackoverflow.com/questions/10373660/converting-a-pandas-groupby-output-from-series-to-dataframe
+    
+    df['Consumption'] = df['Consumption'].map(lambda c:c/1000000) #unit conversion on Consumption (now in millions)
 
     return df
 
-energy_df = load_energy(PATH, 'Energy_use.xls')
+#call
+energy_df = load_energy(PATH, 'energy.xls')
+
+#energy_df.head()
+#energy_df.tail()
+
+#weather df doesn't have a coll Month -oh, we'll use mine -re-fixing
+def month_df(df, month_number):
+    df1 = df[df['Month'] == month_number]
+    return df1
+
+def state_month_df(df, month_number, state_string):
+    df['Month'] = df['Date'].map(lambda d: d.month)
+    df_aug = df[df['Month'] == month_number]
+    state = df_aug[df_aug['State'] == state_string]
+    return state
+
+#call
+month_dfs = []
+for m in months: 
+    df = month_df(weather_df, m)
+    month_dfs.append(df)
+
+
+merged_month_dfs = []
+for df in month_dfs:
+    merged = energy_df.merge(df, on=['State', 'Year'], how='inner')
+    merged_month_dfs.append(merged)    
+
+#end Rachel
+
+
+
 
 '''
 def df_maker():
