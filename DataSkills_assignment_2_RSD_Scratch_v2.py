@@ -112,7 +112,6 @@ def load_and_read_weather(path):
 weather_df = load_and_read_weather(weather_data)
 
 
-
 '''
 I cannot get this code to run. Would prefer not to break up the function. 
 
@@ -130,7 +129,6 @@ def read_df(listdir):
 
 #call
 read_df(weather_data)
-
 
 
 def read_weather(listdir):
@@ -179,19 +177,34 @@ def load_energy(PATH, filename):
 
 
 
-weather_df = load_weather(weather_data)
+#call
 energy_df = load_energy(PATH, 'energy.xls')
 
 
-def month_df(df, month_number):
-    df = df[df['Month'] == month_number]
+#this doesn't work, and I can't figure out why. The second dataframe is always blank. 
+def separate_months(df):
+    month_dfs = []
+    for m in months:
+        df = df[df['Month'] == m]
+        month_dfs.append(df)
+    
+    return month_dfs
+ 
+       
+month_dfs = separate_months(weather_df)    
+month_dfs
+
+
+'''
+This does work, but only if I call them individually. 
+
+def month_df(df, m):
+    df = df[df['Month'] == m]
     return df
 
-
-month_dfs = []
-for m in months: 
-    df = month_df(weather_df, m)
-    month_dfs.append(df)
+month_df(weather_df, 1)
+month_df(weather_df, 8)
+'''
 
 
 merged_month_dfs = []
@@ -200,21 +213,6 @@ for df in month_dfs:
     merged_month_dfs.append(merged)    
 
 
-
-'''
-def merge_by_month(list):
-    month_dfs = []
-    for m in list:
-        df = month_df(weather_df, m)
-        month_dfs.append(df)
-    
-    merged_dfs = []
-    for df in month_dfs:
-        merged = energy_df.merge(month_df, on=['State', 'Year'], how='inner')
-        merged_dfs.append(merged)
-    
-    return merged_dfs
- '''
 
 
 
