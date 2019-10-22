@@ -9,8 +9,8 @@ import itertools
 import numpy as np 
 
 #chose where to save the data (PATH) and the plots (save_plots_path)
-PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
-#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
+#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
 save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
 #Talk to teck support 
@@ -60,8 +60,8 @@ def get_data(url): #check toggle
 
                 state, measure, month = weather_response.text.split('\n')[0].split(', ')
    
-                with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
-                #with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile: #mac
+                #with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+                with open(os.path.join(PATH, state+'_'+month+'.csv'), 'w') as ofile: #mac
                     ofile.write(weather_response.text)
 
 
@@ -69,10 +69,11 @@ def get_data(url): #check toggle
 get_data(urls) 
 
 #currenlty only accomodates csv form data
-def read_df(path):
-    if path.endswith('.csv'):
-        st, month = path.split('_')
-        df = pd.read_csv(os.path.join(path, 'weather'), skiprows = 4)
+def read_df(filename):
+    if filename.endswith('.csv'):
+        st, month = filename.split('_')
+        df = pd.read_csv(os.path.join(filename), skiprows = 4)
+        #df = pd.read_csv(os.path.join('weather', filename), skiprows = 4)
         df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
         df['State'] = st
         return df
@@ -81,6 +82,10 @@ def read_df(path):
 
 #call
 read_df(PATH)
+df_contents = []
+for filepath in os.listdir(PATH): #in weather_data os.path.join(PATH, 'weather')
+    data = read_df(filepath)
+    df_contents.append(data)
 
 def read_weather(path):
     df_contents = []
@@ -99,44 +104,18 @@ def read_weather(path):
 
     return df
 
+#call
+weather_df = read_weather(PATH)
+#weather_df.head()
+#weather_df.tail()
+
+'''
 os.listdir(os.path.join(PATH, 'weather'))
 weather_df = read_weather(os.path.join(PATH, 'weather'))
 read_weather(PATH)
-
-#end Rachel
-
-
-def read_df(path):
-    if path.endswith('.csv'):
-        st, month = path.split('_')
-        df = pd.read_csv(os.path.join(path), skiprows = 4)
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
-        df['State'] = st
-        return df
-    else:
-        print('unexpected file type in folder')
-
-#call
-read_df(PATH)
-
-def read_weather(path):
-    df_contents = []
-    for filepath in os.listdir(path): #in weather_data
-        data = read_df(filepath)
-        df_contents.append(data)
-    
-    df = pd.concat(df_contents)
-    df = df.sort_values(['State', 'Date']) 
-    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
-
-    return df
-weather_df = read_weather(os.path.join(PATH, 'weather'))
-#call
-weather_df = read_weather(PATH)
-
-def load_energy(path, filename):
-    df = pd.read_excel(os.path.join(path, filename), skiprows = 1, na_values = '.')
-    #cite https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_excel.html 
+'''
+def load_energy(PATH, filename):
+    df = pd.read_excel(os.path.join(PATH, filename), skiprows=1)
     df = pd.DataFrame(df)
 
     df = df.rename(index=str, columns={'STATE':'St_Abbr',
@@ -149,17 +128,51 @@ def load_energy(path, filename):
     #code reference: https://stackoverflow.com/questions/40814187/map-us-state-name-to-two-letter-acronyms-that-was-given-in-dictionary-separately
     
     df = df.drop(df[df['TYPE OF PRODUCER'] != 'Total Electric Power Industry'].index)
-    #df = df.drop(df[df['Consumption'] == "."].index)
+    df = df.drop(df[df['Consumption'] == "."].index)
     df = df.dropna(axis=0)
     df = df.drop(['YEAR', 'St_Abbr', 'TYPE OF PRODUCER', 'ENERGY SOURCE              (UNITS)'], axis=1)
     
     df = pd.DataFrame(df.groupby(['State', 'Year'])['Consumption'].sum()).reset_index()
     #code reference: https://stackoverflow.com/questions/40553002/pandas-group-by-two-columns-to-get-sum-of-another-column
     #code reference: https://stackoverflow.com/questions/10373660/converting-a-pandas-groupby-output-from-series-to-dataframe
+    
+    df['Consumption'] = df['Consumption'].map(lambda c:c/1000000) #unit conversion on Consumption (now in millions)
 
     return df
 
-energy_df = load_energy(PATH, 'Energy_use.xls')
+#call
+energy_df = load_energy(PATH, 'energy.xls')
+
+#energy_df.head()
+#energy_df.tail()
+
+#weather df doesn't have a coll Month -oh, we'll use mine -re-fixing
+def month_df(df, month_number):
+    df1 = df[df['Month'] == month_number]
+    return df1
+
+def state_month_df(df, month_number, state_string):
+    df['Month'] = df['Date'].map(lambda d: d.month)
+    df_aug = df[df['Month'] == month_number]
+    state = df_aug[df_aug['State'] == state_string]
+    return state
+
+#call
+month_dfs = []
+for m in months: 
+    df = month_df(weather_df, m)
+    month_dfs.append(df)
+
+
+merged_month_dfs = []
+for df in month_dfs:
+    merged = energy_df.merge(df, on=['State', 'Year'], how='inner')
+    merged_month_dfs.append(merged)    
+
+#end Rachel
+
+
+
 
 '''
 def df_maker():
