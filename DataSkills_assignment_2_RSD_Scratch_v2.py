@@ -8,16 +8,16 @@ import itertools
 import datetime as dt
 
 
-PATH = r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon'
+PC_PATH = r'c:\users\rache\Documents\GitHub\assignment-2-rachel-steiner-dillon'
 
-# Mac Paths:
-#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
-#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
-#save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
-#os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
+MAC_PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+MAC_DATA_PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
+os.chdir(os.path.expanduser(MAC_PATH)) #set working directory required for Mac
+
 
 State_List = [('k','Illinois'), ('r','California'), 
               ('b', 'New York'), ('darkgreen','Texas')]
+
 
 months = [1, 8]
 states = range(1, 49)
@@ -33,11 +33,11 @@ urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, mont
 urls.append(energy_url)
 
 
-weather_data = os.listdir(os.path.join(PATH, 'weather'))
+weather_data = os.listdir(os.path.join(PC_PATH, 'weather'))
 
 
-def get_data(list):
-    if len([f for f in weather_data]) == len(urls)-1:
+def get_data(list, path):
+    if len([f for f in weather_data]) >= len(urls)-1:
         print('files have been downloaded')
     
     else:
@@ -47,7 +47,7 @@ def get_data(list):
             if url.endswith('.xls'):
                 energy_response = requests.get(energy_url)
         
-                with open(os.path.join(PATH, 'energy.xls'), 'wb') as output:
+                with open(os.path.join(path, 'energy.xls'), 'wb') as output:
                     output.write(energy_response.content)
                     #code source: https://stackoverflow.com/questions/25415405/downloading-an-excel-file-from-the-web-in-python
     
@@ -56,46 +56,21 @@ def get_data(list):
 
                 state, measure, month = weather_response.text.split('\n')[0].split(', ')
    
-                with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
+                with open(os.path.join(path, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
                     ofile.write(weather_response.text)
 
 
 #call
-get_data(urls)
+get_data(urls, PC_PATH)
 
 
-'''
-Jeff's solution:
-    
-assert(all([fname.endswith('.csv') for fname in weather_data])), 'Non-csv file type found in "weather" folder'
 
-def load_weather(path):
+def load_and_read_weather(listdir, path):
     dfs = []
-    for f in path:
-        st, month = f.split('_')
-        df = pd.read_csv(os.path.join(PATH, 'weather', f), skiprows=4)
-        df['State'] = st
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
-        dfs.append(df)
-
-    df = pd.concat(dfs)
-    df = df.sort_values(['State', 'Date'])
-    df['Year'] = df['Date'].map(lambda d: d.year)
-    df['Month'] = df['Date'].map(lambda d: d.month)
-    
-    return df
-
-weather_df = load_weather(weather_data)
-'''
-
-
-
-def load_and_read_weather(path):
-    dfs = []
-    for fname in path:
+    for fname in listdir:
         if fname.endswith('.csv'):
             st, month = fname.split('_')
-            df = pd.read_csv(os.path.join(PATH, 'weather', fname), skiprows=4)
+            df = pd.read_csv(os.path.join(path, 'weather', fname), skiprows=4)
             df['State'] = st
             df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
             dfs.append(df)
@@ -109,7 +84,7 @@ def load_and_read_weather(path):
 
 
 #call
-weather_df = load_and_read_weather(weather_data)
+weather_df = load_and_read_weather(weather_data, PC_PATH)
 
 
 '''
@@ -151,8 +126,8 @@ weather_df = read_weather(weather_data)
 
 
 
-def load_energy(PATH, filename):
-    df = pd.read_excel(os.path.join(PATH, filename), skiprows=1)
+def load_energy(path, filename):
+    df = pd.read_excel(os.path.join(path, filename), skiprows=1)
     df = pd.DataFrame(df)
 
     df = df.rename(index=str, columns={'STATE':'St_Abbr',
@@ -178,7 +153,8 @@ def load_energy(PATH, filename):
 
 
 #call
-energy_df = load_energy(PATH, 'energy.xls')
+energy_df = load_energy(PC_PATH, 'energy.xls')
+
 
 
 #this doesn't work, and I can't figure out why. The second dataframe is always blank. 
@@ -216,11 +192,7 @@ for df in month_dfs:
 
 
 
-#weather_df.to_csv(r'c:\users\rache\Desktop\weather_test.csv', index=False)
-#energy_df.to_csv(r'c:\users\rache\Desktop\energy_test.csv', index=False)
-
-
-def plot_multi_state(df, states):
+def plot_multi_state(df, states, path):
     df['Jan-Aug Delta'] = df.groupby(['State', 'Year'])['Value'].diff()
     df_delta = df.dropna(subset=['Jan-Aug Delta'])[['State', 'Year', 'Jan-Aug Delta']]
 
@@ -241,15 +213,16 @@ def plot_multi_state(df, states):
             ax[i].xaxis.set_ticks_position('none')
 
     plt.suptitle('Average Jan-Aug Temperature Variation')
-    plt.savefig(os.path.join(PATH, 'Jan_Aug_Temp_Delta.png'))
+    plt.savefig(os.path.join(path, 'Jan_Aug_Temp_Delta.png'))
     plt.show()
 
+
 #call
-plot_multi_state(weather_df, State_List)
+plot_multi_state(weather_df, State_List, PC_PATH)
 
 
 
-def avg_aug(df, states):
+def avg_aug(df, states, path):
     df['Month'] = df['Date'].map(lambda d: d.month)
     df_aug = df[df['Month'] == 8]
 
@@ -261,11 +234,12 @@ def avg_aug(df, states):
 
     ax.legend(loc='upper right')
     plt.suptitle('Average August Temperature')
-    plt.savefig(os.path.join(PATH, 'weather', 'Aug_Temp.png'))
+    plt.savefig(os.path.join(path, 'Aug_Temp.png'))
     plt.show()
 
 
-avg_aug(weather_df, State_List)
+#call
+avg_aug(weather_df, State_List, PC_PATH)
 
 
 
