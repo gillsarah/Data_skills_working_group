@@ -219,50 +219,6 @@ for df in month_dfs:
 #weather_df.to_csv(r'c:\users\rache\Desktop\weather_test.csv', index=False)
 #energy_df.to_csv(r'c:\users\rache\Desktop\energy_test.csv', index=False)
 
-def two_scales(ax1, data1, data2):
-    ax2 = ax1.twinx()
-    
-    ax1.plot(df['Year'], df['value'])
-
-
-def plot_weather_energy(df, states):
-    fig, ax = plt.subplots(len(states), 1)
-    
-    colors = ['k-', 'r-', 'b-', 'g-']
-
-    for i, st in enumerate(states):
-        d = df[df['State'] == st]
-        ax[i].bar('Year', 'Consumption', data=d)
-        ax[i].plot(d['Year'], d['Value'], colors[i])
-        ax[i].set_ylabel(st)
-        
-
-        if i == 0:
-            ax[i].xaxis.tick_top()
-        elif i == len(states)-1:
-            pass
-        else:
-            ax[i].set_label('')
-            ax[i].set_xticks([])
-            ax[i].xaxis.set_ticks_position('none')
-
-    plt.suptitle('Annual Energy Consumption by State')
-    #plt.savefig(os.path.join(PATH, 'jan_consumption.png'))
-    plt.show()
-
-states = ['California', 'Illinois', 'New York', 'Texas']
-plot_weather_energy(jan_merged, states)
-
-
-
-
-
-
-
-
-
-
-
 
 def plot_multi_state(df, states):
     df['Jan-Aug Delta'] = df.groupby(['State', 'Year'])['Value'].diff()
@@ -270,12 +226,10 @@ def plot_multi_state(df, states):
 
     fig, ax = plt.subplots(len(states), 1)
     
-    colors = ['k-', 'r-', 'b-', 'g-']
-
-    for i, st in enumerate(states):
-        d = df_delta[df_delta['State'] == st]
-        ax[i].plot(d['Year'], d['Jan-Aug Delta'], colors[i])
-        ax[i].set_ylabel(st)
+    for i, (color, label) in enumerate(states):
+        d = df_delta[df_delta['State'] == label]
+        ax[i].plot(d['Year'], d['Jan-Aug Delta'], color)
+        ax[i].set_ylabel(label)
 
         if i == 0:
             ax[i].xaxis.tick_top()
@@ -290,31 +244,33 @@ def plot_multi_state(df, states):
     plt.savefig(os.path.join(PATH, 'Jan_Aug_Temp_Delta.png'))
     plt.show()
 
-states = ['California', 'Illinois', 'New York', 'Texas']
-plot_multi_state(weather_df, states)
+#call
+plot_multi_state(weather_df, State_List)
 
 
 
-
-
-
-
-def plot_on_one(df, states):
+def avg_aug(df, states):
     df['Month'] = df['Date'].map(lambda d: d.month)
     df_aug = df[df['Month'] == 8]
 
     fig, ax = plt.subplots(1, 1)
 
-    colors = ['k-', 'r-', 'b-', 'g-']
-
-    for st in states:
-        d = df_aug[df_aug['State'] == st]
-        ax.plot(d['Year'], d['Value'], colors[i], label=st)
+    for i, (c, l) in enumerate(states):
+        d = df_aug[df_aug['State'] == l]
+        ax.plot(d['Year'], d['Value'], color=c, label=l)
 
     ax.legend(loc='upper right')
     plt.suptitle('Average August Temperature')
     plt.savefig(os.path.join(PATH, 'weather', 'Aug_Temp.png'))
     plt.show()
 
-states = ['Georgia', 'Maine']
-plot_on_one(weather_df, states)
+
+avg_aug(weather_df, State_List)
+
+
+
+
+
+
+
+
