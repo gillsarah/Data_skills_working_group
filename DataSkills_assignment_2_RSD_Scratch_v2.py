@@ -58,9 +58,15 @@ def get_data(list):
    
                 with open(os.path.join(PATH, 'weather', state+'_'+month+'.csv'), 'w') as ofile:
                     ofile.write(weather_response.text)
+
+
+#call
+get_data(urls)
+
+
+'''
+Jeff's solution:
     
-
-
 assert(all([fname.endswith('.csv') for fname in weather_data])), 'Non-csv file type found in "weather" folder'
 
 def load_weather(path):
@@ -79,27 +85,58 @@ def load_weather(path):
     
     return df
 
+weather_df = load_weather(weather_data)
+'''
+
+
+
+def load_and_read_weather(path):
+    dfs = []
+    for fname in path:
+        if fname.endswith('.csv'):
+            st, month = fname.split('_')
+            df = pd.read_csv(os.path.join(PATH, 'weather', fname), skiprows=4)
+            df['State'] = st
+            df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
+            dfs.append(df)
+
+        df = pd.concat(dfs)
+        df = df.sort_values(['State', 'Date'])
+        df['Year'] = df['Date'].map(lambda d: d.year)
+        df['Month'] = df['Date'].map(lambda d: d.month)
+    
+    return df
+
+
+#call
+weather_df = load_and_read_weather(weather_data)
+
 
 
 '''
-def read_df(path):
-    for f in path:
-        if f.endswith('.csv'):
-            st, month = f.split('_')
-            df = pd.read_csv(os.path.join(path, 'weather'), skiprows = 4)
+I cannot get this code to run. Would prefer not to break up the function. 
+
+def read_df(listdir):
+    for fname in listdir:
+        if fname.endswith('.csv'):
+            st, month = fname.split('_')
+            df = pd.read_csv(os.path.join(PATH, 'weather', fname), skiprows = 4)
             df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
             df['State'] = st
             return df
+    
         else:
             print('unexpected file type in folder')
 
 #call
 read_df(weather_data)
 
-def read_weather(path):
+
+
+def read_weather(listdir):
     df_contents = []
-    for filepath in os.listdir(path):
-        data = read_df(filepath)
+    for file in listdir:
+        data = read_df(file)
         df_contents.append(data)
     
     df = pd.concat(df_contents)
@@ -108,8 +145,12 @@ def read_weather(path):
 
     return df
 
-weather_df = read_weather(PATH)
+
+weather_df = read_weather(weather_data)
 '''
+
+
+
 
 
 def load_energy(PATH, filename):
@@ -143,8 +184,8 @@ energy_df = load_energy(PATH, 'energy.xls')
 
 
 def month_df(df, month_number):
-    df1 = df[df['Month'] == month_number]
-    return df1
+    df = df[df['Month'] == month_number]
+    return df
 
 
 month_dfs = []
