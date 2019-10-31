@@ -1,3 +1,5 @@
+'note, weird symbals on page 10, be sure to check'
+
 import PyPDF2 #pip install PyPDF2
 import requests
 import os
@@ -54,62 +56,84 @@ def noun_to_adj(doc, noun):
             adj_children = [t for t in vt.children if t.pos_ == 'ADJ']
             print('Noun:', noun, '\n--> Verb:', vt, '\n--> Adj:', adj_children)
 
-
-text = pages[10] 
+#explore
+text = pages[6] 
 doc = nlp(text) 
 sents = list(doc.sents)
-sents[5]
-
-for i, token in enumerate(sents[5]):
+sentance = sents[7]
+sentance
+for i, token in enumerate(sentance):
     print(i, token)
 
 #noun_to_adj(doc, 'petroleum')  
-token = sents[5][14]
+token = sentance[40]
 token
 temp = list(token.ancestors) 
-for token in temp:
-    print(token, token.pos_)
+for t in temp:
+    print(t, t.pos_)
 
 child1 = list(token.children)
-for token in child1: 
-    print(token, token.pos_)
+for t in child1: 
+    print(t, t.pos_)
+
 
 '''
+
+
+pages[10], sents[10]
+Noun -> Noun-> 'growth' n
+solar.ancestors -> generation.ancestors -> 'growth'
+
+pages[10], sents[9]
+Noun -> Noun -> 'increase' n
+wind.ancestors -> generation.ancestors -> 'increase'
+
+pages[10], sents[6]
+Noun->Noun-> 'drclines' v
+nucear.ancestor -> generation.ancestor -> 'declines'
+
 pages[10], sents[5]
 coal
 Noun -> Noun -> 'drops' v
 coal.ancestor-> generation.ancestor -> 'drops' 
 
 pages[10], sents[4]
-coal
+
 Noun-> Noun -> 'decline' v
 coal.ancestor -> Generation.child -> 'decline' 
 
 Noun -> Noun -> Verb -> 'decline'
 nucear.ancestor -> Generation.ancestor -> expected.child -> 'decline'
 '''
-0 In
-1 the
-2 Reference
-3 case
-4 ,
-5 from
-6 a
-7 28
-8 %
-9 share
-10 in
-11 2018
-12 ,
-13 coal
+
+0 ŁSolar
+1 Investment
+2 Tax
+3 Credits
+4 (
+5 ITC
+6 )
+7 phase
+8 down
+9 after
+10 2024
+11 ,
+12 but
+13 solar
 14 generation
-15 drops
-16 to
-17 17
-18 %
-19 of
-20 total
-21 generation
-22 by
-23 2050
-24 .
+15 growth
+16 continues
+17 because
+18 the
+19 costs
+20 for
+21 solar
+22 continue
+23 to
+24 fall
+25 faster
+26 than
+27 for
+28 other
+29 sources
+30 .
