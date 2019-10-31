@@ -66,7 +66,7 @@ for i, token in enumerate(sentance):
     print(i, token)
 
 #noun_to_adj(doc, 'petroleum')  
-token = sentance[40]
+token = sentance[39]
 token
 temp = list(token.ancestors) 
 for t in temp:
@@ -78,7 +78,11 @@ for t in child1:
 
 
 '''
+pates[6], sents[6]
+oil.ancestor -> production.ancestor -> 'increases' n and 'decreased' v
 
+pages[6], sents[7]
+oil.ancestor -> production.ancestor -> 'falling' v and 'increasing' v
 
 pages[10], sents[10]
 Noun -> Noun-> 'growth' n
@@ -106,34 +110,59 @@ Noun -> Noun -> Verb -> 'decline'
 nucear.ancestor -> Generation.ancestor -> expected.child -> 'decline'
 '''
 
-0 ŁSolar
-1 Investment
-2 Tax
-3 Credits
-4 (
-5 ITC
-6 )
-7 phase
-8 down
-9 after
-10 2024
-11 ,
-12 but
-13 solar
-14 generation
-15 growth
-16 continues
-17 because
-18 the
-19 costs
-20 for
-21 solar
-22 continue
-23 to
-24 fall
-25 faster
-26 than
-27 for
-28 other
-29 sources
-30 .
+#may need to remove the chart data:
+text = pages[10]
+doc = nlp(text)
+sents = list(doc.sents)
+sents[0]
+
+sentance = sents[0].text
+sentance.replace(sentance, '')
+sentance
+
+page_num = 10
+energy_type = ['coal', 'Coal']
+
+
+text = pages[page_num]
+doc = nlp(text)
+
+energy_mentions = [t for t in doc if t.text in energy_type]
+energy_mentions
+
+energy_ancestors = [list(w.ancestors) for w in energy_mentions]
+print('energy_ancestors')
+print(energy_ancestors)
+
+energy_production = [[a for a in ancestors if a.text in production_list] for ancestors in energy_ancestors]
+energy_production
+
+energy_production_ancestors = [[list(w.ancestors) for w in ancestors] for ancestors in energy_production]
+energy_production_ancestors    #[item for sublist in l for item in sublist]
+
+energy_production_children = [[list(w.children) for w in child] for child in energy_production]
+energy_production_children
+
+production_up = ['increase','increases', 'increasing','growth']
+production_down = ['decreases','decreased', 'decline','declines','drops']
+up_count = 0
+down_count = 0
+
+for ancestor_list in energy_production_ancestors:
+    #print(token_list)
+    for token_list in ancestor_list:
+        for ancestor in token_list:
+            #print(ancestor)
+             #print(ancestor.text)
+            if ancestor.text in production_up:
+                print('found up')
+                up_count += 1
+            elif ancestor.text in production_down:
+                print('found down')
+                down_count += 1
+print([up_count, down_count])
+        
+
+
+
+
