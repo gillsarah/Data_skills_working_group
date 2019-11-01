@@ -56,17 +56,33 @@ def noun_to_adj(doc, noun):
             adj_children = [t for t in vt.children if t.pos_ == 'ADJ']
             print('Noun:', noun, '\n--> Verb:', vt, '\n--> Adj:', adj_children)
 
+#explore again
+#maybe I need to look at noun_chunks 
+text = pages[5] 
+doc = nlp(text) 
+list(doc.noun_chunks) 
+
+'''
+v = sents[7][7]
+list(v.subtree) #that's the whole sentnace
+list(v.ancestors)
+list(v.children)
+'''
+
+
+
+
 #explore
-text = pages[6] 
+text = pages[10] 
 doc = nlp(text) 
 sents = list(doc.sents)
-sentance = sents[7]
+sentance = sents[5]
 sentance
 for i, token in enumerate(sentance):
     print(i, token)
 
 #noun_to_adj(doc, 'petroleum')  
-token = sentance[39]
+token = sentance[15]
 token
 temp = list(token.ancestors) 
 for t in temp:
@@ -96,10 +112,15 @@ pages[10], sents[6]
 Noun->Noun-> 'drclines' v
 nucear.ancestor -> generation.ancestor -> 'declines'
 
+Noun-> verb -> 'generation'
+nuclear.ancestor -> declines.children -> 'generation'
+
 pages[10], sents[5]
 coal
 Noun -> Noun -> 'drops' v
 coal.ancestor-> generation.ancestor -> 'drops' 
+Noun -> verb
+coal.ancestor-> drops.children -> 'generation'
 
 pages[10], sents[4]
 
@@ -111,17 +132,38 @@ nucear.ancestor -> Generation.ancestor -> expected.child -> 'decline'
 '''
 
 #may need to remove the chart data:
+
+#pipeline to tokenize
+#when wrap in mlp
+#you can customize the tokenization
+#to remove sentances youll need to re-tokenize
+#or get the text out, go to teh origional text
+#then re-do the doc= 
+
+#the correct way is to retokenize but using sring methods is ok
+
+#sents is a spam
+text.replace(s.text, '')
+
+
 text = pages[10]
 doc = nlp(text)
 sents = list(doc.sents)
-sents[0]
+sents[3]
 
-sentance = sents[0].text
-sentance.replace(sentance, '')
-sentance
+sentance0 = sents[0].text
+sents[0] = sentance0.replace(sentance0, '')
+sentance1 = sents[1].text
+sents[1] = sentance1.replace(sentance1, '')
+
+ 
+new_doc = nlp(text.replace(sents[0].text, '')
+#new_doc = nlp(text.replace(sents[1].text, '')
+#sents = list(new_doc.sents)
+#sents[0]
 
 page_num = 10
-energy_type = ['coal', 'Coal']
+energy_type = ['nuclear' ,'Nuclear']#['coal', 'Coal']
 
 
 text = pages[page_num]
@@ -148,6 +190,7 @@ production_down = ['decreases','decreased', 'decline','declines','drops']
 up_count = 0
 down_count = 0
 
+
 for ancestor_list in energy_production_ancestors:
     #print(token_list)
     for token_list in ancestor_list:
@@ -160,9 +203,74 @@ for ancestor_list in energy_production_ancestors:
             elif ancestor.text in production_down:
                 print('found down')
                 down_count += 1
+            else:
+                t = list(ancestor.ancestors)
+                print(t)
+                for token in t:
+                    if token.text in production_up:
+                        print('found up')
+                        up_count += 1 
+                    elif token.text in production_down:
+                        print('found down')
+                        down_count += 1
 print([up_count, down_count])
-        
+
+#wrong 
 
 
 
+page_num = 10
+energy_type =  ['wind', "Wind"] #['solar', 'Solar', "PV"]#['coal', 'Coal'] #['nuclear' ,'Nuclear']#
+production_up = ['increase','increases', 'increasing','growth']
+production_down = ['decreases','decreased', 'decline','declines','drops']
 
+
+text = pages[page_num]
+doc = nlp(text)
+
+energy_mentions = [t for t in doc if t.text in energy_type]
+energy_mentions
+
+energy_ancestors = [list(w.ancestors) for w in energy_mentions]
+print('energy_ancestors')
+print(energy_ancestors)
+
+energy_up = [[a for a in ancestors if a.text in production_up] for ancestors in energy_ancestors]
+energy_up
+
+energy_down = [[a for a in ancestors if a.text in production_down] for ancestors in energy_ancestors]
+energy_down
+
+#energy_direction_ancestors = [[list(w.ancestors) for w in ancestors] for ancestors in energy_production]
+#energy_production_ancestors    #[item for sublist in l for item in sublist]
+
+energy_up_children = [[list(w.children) for w in child] for child in energy_up]
+energy_down_children =[[list(w.children) for w in child] for child in energy_down]
+energy_up_children
+energy_down_children
+
+
+
+up_count = 0
+down_count = 0
+
+for ancestor_list in energy_up_children:
+    #print(token_list)
+    for token_list in ancestor_list:
+        for ancestor in token_list:
+            #print(ancestor)
+             #print(ancestor.text)
+            if ancestor.text in production_list:
+                print('found up')
+                up_count += 1
+
+for ancestor_list in energy_down_children:
+    #print(token_list)
+    for token_list in ancestor_list:
+        for ancestor in token_list:
+            #print(ancestor)
+             #print(ancestor.text)
+            if ancestor.text in production_list:
+                print('found down')
+                down_count += 1
+print([up_count, down_count])
