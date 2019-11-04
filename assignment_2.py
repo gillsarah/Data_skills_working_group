@@ -2,19 +2,17 @@ import os
 import us 
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter  #just need it if we want to fomat the y-axis
 import itertools 
 import numpy as np 
 
-#chose where to save the data (PATH) and the plots (save_plots_path)
+#chose where to save the data (PATH) and the plots (PATH)
 PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 #PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill/weather'
-save_plots_path = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
+#PATH = '/Users/Sarah/Documents/GitHub/assignment-2-sarah-gill'
 os.chdir(os.path.expanduser(PATH)) #set working directory -Needed for Mac
-#Talk to teck support 
-
 
 #chose 4 states to plot and the colors for their lines.
 STATE_LIST = [('k','Illinois'), ('r','California'), 
@@ -29,16 +27,15 @@ energy_url = 'https://www.eia.gov/electricity/data/state/annual_consumption_stat
 def build_url(st, mo, base):
     return base.format(st, mo)
 
-urls = []
-urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
-urls.append(energy_url)
 
+#urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
+#urls.append(energy_url)
 
-weather_data = os.listdir(os.path.join(PATH, 'weather')) #PC
+#weather_data = os.listdir(os.path.join(PATH, 'weather')) #PC
 #weather_data = os.listdir(os.path.join(PATH)) #mac
 
 
-def get_data(url): #check toggle
+def get_data(url,PATH): #check toggle
     #if len([f for f in weather_data]) == len(urls)-1:
         #print('files have been downloaded')
     if len(weather_data) >=len(urls): #Sarah
@@ -69,14 +66,15 @@ def get_data(url): #check toggle
 #get_data(urls) 
 
 #test from Rachel
-weather_data = os.listdir(os.path.join(PATH, 'weather'))
+#call
+#weather_data = os.listdir(os.path.join(PATH, 'weather'))
 
-def load_and_read_weather(path):
+def load_and_read_weather(listdir, path):
     dfs = []
-    for fname in path:
+    for fname in listdir:
         if fname.endswith('.csv'):
             st, month = fname.split('_')
-            df = pd.read_csv(os.path.join(PATH, 'weather', fname), skiprows=4)
+            df = pd.read_csv(os.path.join(path, 'weather', fname), skiprows=4)
             df['State'] = st
             df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
             dfs.append(df)
@@ -88,54 +86,11 @@ def load_and_read_weather(path):
     
     return df
 
-weather_df = load_and_read_weather(weather_data)
+#weather_df = load_and_read_weather(weather_data, PATH)
 
 #end test
 #works!!!!
 
-'''
-#currenlty only accomodates csv form data
-def read_df(filename):
-    if filename.endswith('.csv'):
-        st, month = filename.split('_')
-        df = pd.read_csv(os.path.join(filename), skiprows = 4)
-        #df = pd.read_csv(os.path.join('weather', filename), skiprows = 4)
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
-        df['State'] = st
-        return df
-    else:
-        print('unexpected file type in folder')
-
-#call
-read_df(PATH)
-df_contents = []
-for filepath in os.listdir(PATH): #in weather_data os.path.join(PATH, 'weather')
-    data = read_df(filepath)
-    df_contents.append(data)
-
-def read_weather(path):
-    df_contents = []
-
-    for filepath in os.listdir(path):
-        data = read_df(filepath)
-        df_contents.append(data)        
-    
-    df = pd.concat(df_contents)
-    df = df.sort_values(['State', 'Date']) 
-    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
-
-    return df
-
-#call
-weather_df = read_weather(PATH)
-#weather_df.head()
-#weather_df.tail()
-'''
-'''
-os.listdir(os.path.join(PATH, 'weather'))
-weather_df = read_weather(os.path.join(PATH, 'weather'))
-read_weather(PATH)
-'''
 def load_energy(PATH, filename):
     df = pd.read_excel(os.path.join(PATH, filename), skiprows=1)
     df = pd.DataFrame(df)
@@ -163,7 +118,7 @@ def load_energy(PATH, filename):
     return df
 
 #call
-energy_df = load_energy(PATH, 'energy.xls')
+#energy_df = load_energy(PATH, 'energy.xls')
 
 #energy_df.head()
 #energy_df.tail()
@@ -174,84 +129,17 @@ def month_df(df, month_number):
     df1 = df[df['Month'] == month_number]
     return df1
 
-def state_month_df(df, month_number, state_string):
-    df['Month'] = df['Date'].map(lambda d: d.month)
-    df_aug = df[df['Month'] == month_number]
-    state = df_aug[df_aug['State'] == state_string]
-    return state
+
 
 #call
-month_dfs = []
-for m in months: 
-    df = month_df(weather_df, m)
-    month_dfs.append(df)
+#df_jan = month_df(weather_df, 1)
+#df_aug = month_df(weather_df, 8)
+  
+#inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
+#jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
+#aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
+#cite https://stackoverflow.com/questions/41815079/pandas-merge-join-two-data-frames-on-multiple-columns
 
-
-merged_month_dfs = []
-for df in month_dfs:
-    merged = energy_df.merge(df, on=['State', 'Year'], how='inner')
-    merged_month_dfs.append(merged)    
-
-#end Rachel
-
-
-
-
-'''
-def df_maker():
-    df_contents = []
-    for filepath in os.listdir(PATH):
-        data = read_df(filepath)
-        df_contents.append(data)
-    
-    df = pd.concat(df_contents)
-    df = df.sort_values(['State', 'Date']) 
-    df['Year'] = df['Date'].map(lambda d: d.year) #add a col for year, we need this for plot 1 and 2
-    return df
-'''
-'''
-def load_data():
-    dfs = []
-    for f in weather_data:
-        st, month = f.split('_')
-        df = pd.read_csv(os.path.join(PATH, 'weather', f), skiprows=4)
-        df['State'] = st
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m')
-        dfs.append(df)
-
-    df = pd.concat(dfs)
-    df = df.sort_values(['State', 'Date'])
-    return df
-'''
-
-'''
-#output is a df of the temperature difference between jan and aug for one state 
-def jan_aug_diff(df, state_string):
-    #df['Year'] = df['Date'].map(lambda d: d.year)
-    df['Jan-Aug Delta'] = df.groupby(['State', 'Year'])['Value'].diff()
-    df_delta = df.dropna(subset=['Jan-Aug Delta'])[['State', 'Year', 'Jan-Aug Delta']]
-    state = df_delta[df_delta['State'] == state_string]
-    return state
-
-def jan_aug_diff_plot(df,STATE_LIST):
-    fig, ax = plt.subplots(4, 1)
-    for index, (color, label) in enumerate(STATE_LIST):
-        #print(index,color, label)
-        state = jan_aug_diff(df, label)
-        ax[index].plot(state['Year'], state['Jan-Aug Delta'], color)
-        ax[index].set_ylabel(label) 
-    ax[0].xaxis.tick_top()
-    ax[1].set_label('')
-    ax[1].set_xticks([])
-    ax[1].xaxis.set_ticks_position('none')
-    ax[2].set_label('') #ledgend lable
-    ax[2].set_xticks([]) #removes the label of x-axis
-    ax[2].xaxis.set_ticks_position('none') #removes the ticks on x-axis
-    #plt.suptitle('Average Jan-Aug Temperature Variation')
-    #plt.savefig(save_plots_path+'/Jan-Aug_Variation.png')
-    plt.show()  
-    #cite: https://stackoverflow.com/questions/14880192/iterate-a-list-of-tuples
-'''
 
 def plot_multi_state(df, states):
     df['Jan-Aug Delta'] = df.groupby(['State', 'Year'])['Value'].diff()
@@ -278,143 +166,11 @@ def plot_multi_state(df, states):
     plt.show()
 
 #call
-plot_multi_state(weather_df, STATE_LIST)
+#plot_multi_state(weather_df, STATE_LIST)
 
-
-
-'''   
-state_energy_use = jan_merged_df[jan_merged_df['State'] == 'Alabama']
-t = state_energy_use['Year']
-s1 = state_energy_use['Value']
-s2 = state_energy_use['Consumption']
-CA_energy_use = jan_merged_df[jan_merged_df['State'] == 'California']['Year']
-p = CA_energy_use['Year']
-s3 = CA_energy_use['Value']
-s4 = CA_energy_use['Consumption']
-'''
-
-
-# Create axes
-'''
-fig, ([ax1, ax2], [ax3, ax4]) = plt.subplots(2,2)
-ax1= two_scales(ax1, t, s1, s2, 'r', 'b', 'Alabama')
-ax2 = two_scales(ax2, p, s3, s4, 'gold', 'limegreen', 'California')
-ax3 = two_scales(ax3, p, s3, s4, 'gold', 'limegreen', 'a')
-ax4= two_scales(ax4, p, s3, s4, 'gold', 'limegreen', 'b')
-plt.show()
-
-fig, ([ax1, ax2], [ax3, ax4]) = plt.subplots(2,2)
-ax1, ax1a = two_scales(ax1, t, s1, s2, 'r', 'b', 'Alabama')
-ax2, ax2a = two_scales(ax2, p, s3, s4, 'gold', 'limegreen', 'California')
-ax3, ax3a = two_scales(ax3, p, s3, s4, 'gold', 'limegreen', 'a')
-ax4, ax4a = two_scales(ax4, p, s3, s4, 'gold', 'limegreen', 'b')
-
-#works!
-fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2)
-ax[0] = two_scales(ax[0], t, s1, s2, 'r', 'b', 'Alabama')
-ax[1] = two_scales(ax[1], p, s3, s4, 'gold', 'limegreen', 'California')
-ax[2]= two_scales(ax[2], p, s3, s4, 'gold', 'limegreen', 'a')
-ax[3]= two_scales(ax[3], p, s3, s4, 'gold', 'limegreen', 'b')
-plt.tight_layout()
-plt.show()
-'''
-#ax1.xaxis.tick_top()
-#ax2.set_label('')
-#ax2.set_xticks([])
-#ax2.xaxis.set_ticks_position('none')
-#ax3.set_label('') #ledgend lable
-#ax3.set_xticks([]) #removes the label of x-axis
-#ax3.xaxis.set_ticks_position('none')
-
-
-# Change color of each axis
-#can't use this anymore -can iether use this or be able to automiate axes numbering
-'''
-def color_y_axis(ax, color):
-    """Color your axes."""
-    for t in ax.get_yticklabels():
-        t.set_color(color)
-
-color_y_axis(ax1, 'r')
-color_y_axis(ax1a, 'b')
-color_y_axis(ax2, 'gold')
-color_y_axis(ax2a, 'limegreen')
-
-plt.tight_layout()
-plt.show()
-'''
 #cite for graph:
 # https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
 
-
-
-
-
-
-
-
-#working 
-'''
-def plot_weather_energy(df, states):
-    fig, ax = plt.subplots(len(states), 1)
-    
-    colors = ['k-', 'r-', 'b-', 'g-']
-
-    for i, st in enumerate(states):
-        ax2[i]=ax[i].twinx()
-        
-        d = df[df['State'] == st]
-        ax[i].plot(d['Year'], d['Consumption'], colors[i])
-        ax2[i].plot(d['Year'], d['Value'], colors[i])
-        ax[i].set_ylabel(st)
-
-        if i == 0:
-            ax[i].xaxis.tick_top()
-        elif i == len(states)-1:
-            pass
-        else:
-            ax[i].set_label('')
-            ax[i].set_xticks([])
-            ax[i].xaxis.set_ticks_position('none')
-
-    plt.suptitle('Annual Energy Consumption by State')
-    #plt.savefig(os.path.join(PATH, 'jan_consumption.png'))
-    plt.show()
-
-states = ['California', 'Illinois', 'New York', 'Texas']
-plot_weather_energy(jan_merged, states)
-'''
-
-
-'''
-#output is a df of one state for one month (e.g. IL for Aug of each year)
-#not useing this
-def state_month_df(df, month_number, state_string):
-    df['Month'] = df['Date'].map(lambda d: d.month)
-    df_month = df[df['Month'] == month_number]
-    state = df_month[df_month['State'] == state_string]
-    return state
-'''
-'''
-#useing this
-def month_df(df, month_number):
-    df['Month'] = df['Date'].map(lambda d: d.month)
-    df_month = df[df['Month'] == month_number]
-    #state = df_month[df_month['State'] == state_string]
-    return df_month
-
-df_jan = month_df(weather_df, 1)
-df_aug = month_df(weather_df, 8)
-
-#df_aug_CA = state_month_df(weather_df, 8, 'California')
-'''
-
-df_jan = month_df(weather_df, 1)
-df_aug = month_df(weather_df, 8)
-#inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
-jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
-aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
-#cite https://stackoverflow.com/questions/41815079/pandas-merge-join-two-data-frames-on-multiple-columns
 
 
 #will use this one
@@ -428,10 +184,11 @@ def month_temp_plot(df, month_num, month_name, STATE_LIST):
         ax.plot(state['Year'], state['Value'], color, label = label)
     ax.legend(loc='upper right')
     plt.suptitle('Average '+ month_name + ' Temperature')
-    plt.savefig(save_plots_path+'/Aug_Temp.png')
+    plt.savefig(PATH+'/Aug_Temp.png')
     plt.show()
 
-month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+#month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+
 '''
 def summary_stats(df, STATE_LIST, month_num):
     for color, label in STATE_LIST:
@@ -450,8 +207,8 @@ def summary_stats(df, STATE_LIST, month_num, colum_name, quiry):
 
 
 #call
-summary_stats(weather_df, STATE_LIST, 8, 'Value', 'August Temperature')
-summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
+#summary_stats(weather_df, STATE_LIST, 8, 'Value', 'August Temperature')
+#summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
 
 #stack overflow 
 #need to get the ledend working!
@@ -459,38 +216,39 @@ summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
 def two_scales(ax1, axis, data1, data2, c1, c2, state_string, month):
     ax2 = ax1.twinx()
     #ax1.plot(axis, data1, color=c1, label = 'temp')
-    ax1.bar(axis, data1, color=c1, label = 'energy')
+    ax1.bar(axis, data1, color=c1, label = 'Energy Use')
     #ax1.set_xlabel('Year')
-    ax1.set_ylabel('Energy Use')
-    ax1.plot(np.NaN, color = c2, label='temp') #plot an empty line so that we can have a legend
+    ax1.set_ylabel('Energy Use in millions')
+    ax1.plot(np.NaN, color = c2, label='Average '+month+' Temp') #plot an empty line so that we can have a legend
     ax1.yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
     #cite: https://stackoverflow.com/questions/29188757/matplotlib-specify-format-of-floats-for-tick-lables 
-    ax2.plot(axis, data2, color=c2, label = 'temp')
+    ax2.plot(axis, data2, color=c2, label = 'Average '+month+' Temp')
     #ax2.bar(axis, data2, color=c2, label = 'energy')
     #ax[i].bar('Year', 'Consumption', data=d)
     #ax2.set_ylabel('Average '+month+' Temp')
-    ax2.set_ylabel('Average '+month+' Temp', rotation=270,labelpad=15)
+    ax2.set_ylabel('Degrees Fahrenheit', rotation=270,labelpad=15)
     #rotates the second axis lable 180 degrees from start (it is at 90 degrees by default)
     #cite: https://stackoverflow.com/questions/27671748/how-to-print-y-axis-label-horizontally-in-a-matplotlib-pylab-chart 
     #ax1.legend(loc='upper right')
-    ax1.legend(loc='upper right', bbox_to_anchor=(1,1))
-    #cite: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-out-of-the-plot 
-    #currently it is at default 1,1 but can move it around
-
+    ax1.legend(loc='upper right', bbox_to_anchor=(1.11,1.25), fontsize = 'small')
+    #cite: bbox_to_anchor https://stackoverflow.com/questions/4700614/how-to-put-the-legend-out-of-the-plot 
+    #cite: fontsize https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.axes.Axes.legend.html
+    
     plt.title(state_string)
     return ax1, ax2
 
 #ymax = ax1.get_ylim()[1] #-> botom, top this just gives us the top
 #so this includes matplotlib's automatic padding
 
+#TA was helping me with the energy plot: was on this cite
 #matplotlib.org/decdocs/gallery/subplots_axes_and_figures/subplots_demo.html
 
 #works
-def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
+def weather_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
     #fig, ([ax[0], ax[1]], [ax[2], ax[3]]) = plt.subplots(2,2,figsize=(12,6))
     fig, ax_2x2 = plt.subplots(2,2,figsize=(12,6))
-    ax = [l for l2 in ax_2x2 for l in l2] #flaten
-    #weather_colors = ['k', 'r', 'b', 'darkgreen']
+    ax = [l for l2 in ax_2x2 for l in l2] #flaten 
+    #cite: help from Jeff Levy
     energy_colors = ['tab:blue','gold', 'c', 'cornflowerblue']
     #cite https://matplotlib.org/3.1.0/gallery/color/named_colors.html
     for index, (color, label) in enumerate(STATE_LIST):
@@ -500,16 +258,36 @@ def temp_energy_state_plot(jan_merged_df, STATE_LIST, month_string):
                 jan_merged_df[jan_merged_df['State'] == label]['Value'],
                 energy_colors[index], color,label, month_string)
     plt.tight_layout()
-    #plt.savefig(save_plots_path+'/'+month_string+'Energy_temp_plot.png')
+    plt.savefig(PATH+'/'+month_string+'Energy_temp_plot.png')
     plt.show()  
 
 #cite for graph:
 # https://stackoverflow.com/questions/44825950/matplotlib-create-two-subplots-in-line-with-two-y-axes-each 
 
 #call
-temp_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
-temp_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
+def main():
+    urls = [build_url(st, mo, base_url) for st, mo in itertools.product(states, months)]
+    urls.append(energy_url)
+    weather_data = os.listdir(os.path.join(PATH, 'weather')) #PC
+    weather_df = load_and_read_weather(weather_data, PATH)
+    energy_df = load_energy(PATH, 'energy.xls')
+    df_jan = month_df(weather_df, 1)
+    df_aug = month_df(weather_df, 8)
+  
+    #inner gets rid of years that do not exist in both datasets (so years before 1990 and after 2019)
+    jan_merged_df = df_jan.merge(energy_df, on=['State','Year'], how = 'inner') 
+    aug_merged_df = df_aug.merge(energy_df, on=['State','Year'], how = 'inner') 
+    #cite https://stackoverflow.com/questions/41815079/pandas-merge-join-two-data-frames-on-multiple-columns
 
+    plot_multi_state(weather_df, STATE_LIST)
+    month_temp_plot(weather_df, 8, 'August', STATE_LIST)
+
+    weather_energy_state_plot(jan_merged_df, STATE_LIST, 'January')
+    weather_energy_state_plot(aug_merged_df, STATE_LIST, 'August')
+    summary_stats(weather_df, STATE_LIST, 8, 'Value', 'August Temperature')
+    summary_stats(aug_merged_df, STATE_LIST, 8, 'Consumption', 'Energy Use')
+
+main()
 #jan_merged_df.head()
 #list(jan_merged_df)
 '''
