@@ -50,8 +50,8 @@ downloaded = True
 
 
 #these are the words of interest, add as needed 
-production_up = ['increase','increases', 'increasing','growth', 'grows', 'grow']
-production_down = ['decreases','decreased', 'decline','declines','drops', 'falls', 'falling', 'fall']
+up_list = ['increase','increases', 'increasing','growth', 'grows', 'grow']
+down_list = ['decreases','decreased', 'decline','declines','drops', 'falls', 'falling', 'fall']
 
 production_list = ['production', 'Production','generation', 'Generation'] #can remove the last one
 price_list = ['price', 'prices', 'costs', 'cost', 'Price', 'Prices', 'Cost', 'Costs']
@@ -239,8 +239,8 @@ def count_instances(pages, page_list, energy_type, expimp = False, econ_list = [
             #cite: https://stackoverflow.com/questions/18713321/element-wise-addition-of-2-lists
     else:    
         for page_num in page_list:
-            energy_up_children = energy_direction(pages, page_num, energy_type, production_up, econ_list)
-            energy_down_children = energy_direction(pages, page_num, energy_type, production_down, econ_list)
+            energy_up_children = energy_direction(pages, page_num, energy_type, up_list, econ_list)
+            energy_down_children = energy_direction(pages, page_num, energy_type, down_list, econ_list)
             temp_list = econ_activity(energy_up_children, energy_down_children, econ_list)
             totals_list = [sum(x) for x in zip(totals_list, temp_list)]
     return(totals_list)
