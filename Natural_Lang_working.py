@@ -108,7 +108,7 @@ for i, token in enumerate(doc):
 
 token = doc[22]
     econ_list= ['costs']
-    production_direction = production_down 
+    production_direction = down_list 
 
     energy_mentions = [t for t in sentance if t.text in solar]
     #energy_mentions
@@ -311,8 +311,8 @@ energy_production_ancestors    #[item for sublist in l for item in sublist]
 energy_production_children = [[list(w.children) for w in child] for child in energy_production]
 energy_production_children
 
-production_up = ['increase','increases', 'increasing','growth']
-production_down = ['decreases','decreased', 'decline','declines','drops']
+up_list = ['increase','increases', 'increasing','growth']
+down_list = ['decreases','decreased', 'decline','declines','drops']
 
 up_count = 0
 down_count = 0
@@ -329,7 +329,7 @@ for ancestor_list in energy_production_ancestors:
             if ancestor.text in production_list and not negation:
                 print('found up')
                 up_count += 1
-            elif ancestor.text in production_down and not negation:
+            elif ancestor.text in down_list and not negation:
                 print('found down')
                 down_count += 1
             elif ancestor.text = 'export' and negation:
@@ -339,10 +339,10 @@ for ancestor_list in energy_production_ancestors:
                 t = list(ancestor.ancestors)
                 print(t)
                 for token in t:
-                    if token.text in production_up:
+                    if token.text in up_list:
                         print('found up')
                         up_count += 1 
-                    elif token.text in production_down:
+                    elif token.text in down_list:
                         print('found down')
                         down_count += 1
             '''
@@ -389,8 +389,8 @@ def test_negation (token, negation = False):
 
 page_num = 10
 energy_type =  ['solar', 'Solar', "PV"]#['coal', 'Coal'] #['nuclear' ,'Nuclear']#['wind', "Wind"] #
-production_up = ['increase','increases', 'increasing','growth']
-production_down = ['decreases','decreased', 'decline','declines','drops']
+up_list = ['increase','increases', 'increasing','growth']
+down_list = ['decreases','decreased', 'decline','declines','drops']
 price_list = ['price', 'prices', 'costs']
 
 text = pages[page_num]
@@ -403,7 +403,7 @@ energy_ancestors = [list(w.ancestors) for w in energy_mentions]
 print('energy_ancestors')
 print(energy_ancestors)
 
-energy_up = [[a for a in ancestors if a.text in production_up] for ancestors in energy_ancestors]
+energy_up = [[a for a in ancestors if a.text in up_list] for ancestors in energy_ancestors]
 energy_up
 
 #negation
@@ -411,7 +411,7 @@ energy_up_ancestors = [[list(w.ancestors) for w in ancestor_list] for ancestor_l
 [[a for a in ancestors if a.dep_ != 'neg'] for ancestors in energy_ancestors]
 
 
-energy_down = [[a for a in ancestors if a.text in production_down] for ancestors in energy_ancestors]
+energy_down = [[a for a in ancestors if a.text in down_list] for ancestors in energy_ancestors]
 energy_down
 
 #negation
