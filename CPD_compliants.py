@@ -10,13 +10,14 @@ data_path = '/Users/Sarah/Documents/GitHub/chicago-police-data/data'
 #this is the save-to path, this is where the unified_data.zip unzips to
 #and where we read the accused, investigators and victims data from (out of the unzipped contents)
 path =  '/Users/Sarah/Documents/GitHub/assignment-4-gillsarah'
-'/Users/Sarah/Documents/GitHub/assignment-5-sarah-gill-1'
+path_2 = '/Users/Sarah/Documents/GitHub/assignment-5-sarah-gill-1'
 
+profile_path = 'unified_data/profiles/officer-profiles.csv.gz'
 codes_path = 'context_data/discipline_penalty_codes.csv'
 base_path = 'fully-unified-data/complaints/complaints-{}_2000-2016_2016-11.csv.gz'
 file_name = ['accused', 'investigators', 'victims']
 
-
+'''
 #play
 df_sal = pd.read_csv(os.path.join(data_path, 'unified_data/salary/salary-filled_2002-2017_2017-09.csv.gz'))
 df_sal.columns
@@ -38,7 +39,7 @@ merge= df_invest.merge(df_pr, how = 'left', on = 'UID')
 #looks name matches -at lest for [0]
 
 merge2 = df_acc.merge(df_pr, how = 'left', on = 'UID')
-
+'''
 
 def pathmaker(base_path, file):
     return base_path.format(file)
@@ -85,7 +86,8 @@ def merge_dfs(dfs):
     may need to be tweeked. The suffixes, and merges 3 and 4
     The frist df is accused, the second is investigators, the third is victims, the third is codes
     '''
-    merge_1 = dfs[0].merge(dfs[1], how = 'inner', on =  "cr_id", suffixes = ('_accused','_investigators'))
+    merge_0 = dfs[0].merge(dfs[4], how = 'left', on = 'UID', suffixes = ('_accused', '_profile'))
+    merge_1 = merge_0.merge(dfs[1], how = 'inner', on =  "cr_id", suffixes = ('_accused','_investigators'))
     merge_2 = merge_1.merge(dfs[2], how = 'inner', on =  "cr_id")
     merge_3 = merge_2.merge(dfs[3], how = 'left', left_on = 'recommended_discipline', right_on = 'CODE')
 
@@ -114,8 +116,8 @@ def outcome_by_race(df, outcome_word):
     grouped['proportion_'+outcome_word] = grouped[outcome_word]/len(df.index)
     df = grouped['proportion_'+outcome_word]
 
-    print('The proportion of complaints '+outcome_word+', by race of the victim:')
-    print(grouped['proportion_'+outcome_word])
+    #print('The proportion of complaints '+outcome_word+', by race of the victim:')
+    #print(grouped['proportion_'+outcome_word])
     return df
 
 
@@ -129,7 +131,7 @@ def complaint_type_outcomes(accused_df, outcome, outcome_word):
     crosstab = pd.crosstab(accused_df['final_finding'], accused_df['complaint_category'])
     #cite https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.crosstab.html
 
-    print('The following complaint catagories are most likely to be ' + outcome_word + ':')
+    #print('The following complaint catagories are most likely to be ' + outcome_word + ':')
     temp_list = []
     for column in crosstab.columns:
         if crosstab[column].idxmax() == outcome:
@@ -164,28 +166,53 @@ def main():
         else:
             print('unexpected file')
     dfs.append(read_df(data_path, codes_path))
+    dfs.append(read_df(data_path, profile_path))
 
     df = merge_dfs(dfs)
 
-    proportion = total_proportion(dfs[0])
-    print('Total proportion of complaints that are sustained: {:.4f}'.format(proportion))
-    print(' ')
+    #proportion = total_proportion(dfs[0])
+    #print('Total proportion of complaints that are sustained: {:.4f}'.format(proportion))
+    #print(' ')
 
-    race_df = outcome_by_race(df, 'sustained')
+    #race_df = outcome_by_race(df, 'sustained')
 
 
-    outcome_df = complaint_type_outcomes(dfs[0], 'SU', 'sustained')
+    #outcome_df = complaint_type_outcomes(dfs[0], 'SU', 'sustained')
 
-    export_df(df, path, 'full_df.csv')
-    export_df(race_df, path, 'Proportion of compliants sustained by race.csv')
-    export_df(outcome_df, path, 'Most likely to be sustained.csv')
+    export_df(df, path_2, 'full_df.csv')
+    #export_df(race_df, path, 'Proportion of compliants sustained by race.csv')
+    #export_df(outcome_df, path, 'Most likely to be sustained.csv')
 
     return df
 
 
 df = main()
 
+df['count'] = 1 
 
+df2 = df.drop(columns = ['complaints-accused_2000-2016_2016-11_ID', 'cr_id',
+       'complaint_category', 'recommended_discipline_code',
+       'final_discipline_code', 'recommended_finding', 'final_finding',
+       'UID_accused', 'old_UID_accused', 'link_UID_accused', 'sustained',
+       'first_name', 'last_name', 'middle_initial', 'middle_initial2',
+       'suffix_name', 'birth_year', 'gender', 'appointed_date',
+       'resignation_date', 'current_status', 'current_star', 'current_unit',
+       'current_rank', 'start_date', 'org_hire_date', 'profile_count',
+       'cleaned_rank', 'link_UID_profile',
+       'complaints-investigators_2000-2016_2016-11_ID',
+       'investigator_first_name', 'investigator_last_name',
+       'investigator_middle_initial', 'investigator_suffix',
+       'date_investigator_appointed', 'investigator_current_star_number',
+       'investigator_current_rank', 'investigator_current_unit',
+       'UID_investigators', 'old_UID_investigators', 'link_UID',
+       'victim_gender', 'victim_age', 'recommended_discipline',
+       'NOTES_recommended_discipline', 'final_discipline',
+       'NOTES_final_discipline'])
+
+acc_race = df2.groupby(['race', 'victim_race']).sum()
+
+acc_race.columns
+acc_race.head()
 
 
 
