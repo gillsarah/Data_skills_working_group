@@ -221,60 +221,42 @@ d = dict(tuple(df2.groupby('race')))
 g = d['ASIAN/PACIFIC ISLANDER'].groupby('victim_race').sum()
 g.reset_index(inplace=True)
 
-
-def my_fn(df, officer_string, victim_col_name):
+def small_df_maker(df, col1, col2, col3 = 'count'):
     '''
-    takes a string value for officer referencing that the df d was groupped by
-    e.g. 'White' or 'MALE'
-    takes a string value for the colum name 
-    e.g. 'victim_race' or 'victim_gender'
-    output is the equivolent of a mini-df of one variable worth of a groupby by two variables
+    takes a df and two strings: 3 column names in that df, that you want to work with
+    returns a dictionary ready to be used in to my_fn
     '''
-    g = df[officer_string].groupby(victim_col_name).sum()
-    g.reset_index(inplace=True)
-    return g
-    #breaks df2 into a small df for just 1 race? 
-    #plots that subset in a historgram 
-
-my_fn(d, 'ASIAN/PACIFIC ISLANDER', 'victim_race')
-
-def small_df_maker(df, col1, col2):
     drop_list = []
     for colname in df.columns:
         if colname == col1:
             pass
         elif colname == col2:
             pass
+        elif colname == col3:
+            pass
         else:
             drop_list.append(colname)
     df2 = df.drop(columns = drop_list)
-    return df2
+    df3 = dict(tuple(df2.groupby(col1)))
+    return df3
 
-small_df_maker(df, 'gender', 'victim_gender')
 
-df3 = df.drop(columns = ['complaints-accused_2000-2016_2016-11_ID', 'cr_id',
-       'complaint_category', 'recommended_discipline_code',
-       'final_discipline_code', 'recommended_finding', 'final_finding',
-       'UID_accused', 'old_UID_accused', 'link_UID_accused', 'sustained',
-       'first_name', 'last_name', 'middle_initial', 'middle_initial2',
-       'suffix_name', 'birth_year',  'appointed_date',
-       'resignation_date', 'current_status', 'current_star', 'current_unit',
-       'current_rank', 'start_date', 'org_hire_date', 'profile_count',
-       'cleaned_rank', 'link_UID_profile',
-       'complaints-investigators_2000-2016_2016-11_ID',
-       'investigator_first_name', 'investigator_last_name',
-       'investigator_middle_initial', 'investigator_suffix',
-       'date_investigator_appointed', 'investigator_current_star_number',
-       'investigator_current_rank', 'investigator_current_unit',
-       'UID_investigators', 'old_UID_investigators', 'link_UID',
-        'victim_age', 'recommended_discipline',
-       'NOTES_recommended_discipline', 'final_discipline',
-       'NOTES_final_discipline', 'race', 'victim_race'])
+def my_fn(df, officer_string, col1, col2, col3 = 'count'):
+    '''
+    takes a string value for officer, what you want to groubby
+    e.g. 'WHITE' or 'MALE'
+    this needs to line up with the values for col1 (e.g. 'race' or 'gender')
+    takes a string value for the colum name 
+    e.g. 'victim_race' or 'victim_gender'
+    output is the equivolent of a mini-df of one variable worth of a groupby by two variables
+    '''
+    df2 = small_df_maker(df, col1, col2, col3 = 'count')
+    g = df2[officer_string].groupby(col2).sum()
+    g.reset_index(inplace=True)
+    return g
+    #breaks df2 into a small df for just 1 race? 
+    #plots that subset in a historgram 
 
-df3.head()
+my_fn(df, 'WHITE', 'race', 'final_finding')
 
-d2 = dict(tuple(df3.groupby('gender')))
-
-my_fn(d2, 'MALE', 'victim_gender')
-my_fn(d2, 'FEMALE', 'victim_gender')
 
