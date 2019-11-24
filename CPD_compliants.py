@@ -79,6 +79,10 @@ def parse_victims(victims_df):
     victims_df.rename(columns = {'gender':'victim_gender', 'age':'victim_age', 'race':'victim_race'}, inplace = True)
     return victims_df
 
+def parse_profile(profile_df):
+    profile_df['org_hire_date'] = pd.to_datetime(profile_df['org_hire_date'], format='%Y-%m-%d')
+    #profile_df['birth_year'] = pd.to_datetime(profile_df['birth_year'], format='%Y')
+    return profile_df
 
 def merge_dfs(dfs):
     '''
@@ -101,7 +105,7 @@ def merge_dfs(dfs):
 
     merge_4.rename(columns={'final_discipline': 'final_discipline_code',
                             'ACTION_TAKEN'    : 'final_discipline'     }, inplace = True) 
-    
+    merge_4['count'] = 1 
     return merge_4
 
 
@@ -166,7 +170,9 @@ def main():
         else:
             print('unexpected file')
     dfs.append(read_df(data_path, codes_path))
-    dfs.append(read_df(data_path, profile_path))
+    
+    df2 = read_df(data_path, profile_path)
+    dfs.append(parse_profile(df2))
 
     df = merge_dfs(dfs)
 
@@ -188,38 +194,9 @@ def main():
 
 df = main()
 
-df['count'] = 1 
-
-df2 = df.drop(columns = ['complaints-accused_2000-2016_2016-11_ID', 'cr_id',
-       'complaint_category', 'recommended_discipline_code',
-       'final_discipline_code', 'recommended_finding', 'final_finding',
-       'UID_accused', 'old_UID_accused', 'link_UID_accused', 'sustained',
-       'first_name', 'last_name', 'middle_initial', 'middle_initial2',
-       'suffix_name', 'birth_year', 'gender', 'appointed_date',
-       'resignation_date', 'current_status', 'current_star', 'current_unit',
-       'current_rank', 'start_date', 'org_hire_date', 'profile_count',
-       'cleaned_rank', 'link_UID_profile',
-       'complaints-investigators_2000-2016_2016-11_ID',
-       'investigator_first_name', 'investigator_last_name',
-       'investigator_middle_initial', 'investigator_suffix',
-       'date_investigator_appointed', 'investigator_current_star_number',
-       'investigator_current_rank', 'investigator_current_unit',
-       'UID_investigators', 'old_UID_investigators', 'link_UID',
-       'victim_gender', 'victim_age', 'recommended_discipline',
-       'NOTES_recommended_discipline', 'final_discipline',
-       'NOTES_final_discipline'])
-
-acc_race = df2.groupby(['race', 'victim_race']).sum()
-
-acc_race.columns
-acc_race.head()
+#df['count'] = 1 
 
 
-d = dict(tuple(df2.groupby('race')))
-#cite https://stackoverflow.com/questions/19790790/splitting-dataframe-into-multiple-dataframes
-
-g = d['ASIAN/PACIFIC ISLANDER'].groupby('victim_race').sum()
-g.reset_index(inplace=True)
 
 def small_df_maker(df, col1, col2, col3 = 'count'):
     '''
@@ -238,6 +215,8 @@ def small_df_maker(df, col1, col2, col3 = 'count'):
             drop_list.append(colname)
     df2 = df.drop(columns = drop_list)
     df3 = dict(tuple(df2.groupby(col1)))
+    #cite https://stackoverflow.com/questions/19790790/splitting-dataframe-into-multiple-dataframes
+
     return df3
 
 
@@ -260,3 +239,43 @@ def my_fn(df, officer_string, col1, col2, col3 = 'count'):
 my_fn(df, 'WHITE', 'race', 'final_finding')
 
 
+profile_df = read_df(data_path, profile_path)
+profile_df.columns
+profile_df.head()
+
+profile_df['resignation_date'].dtype
+profile_df['org_hire_date'] = pd.to_datetime(profile_df['org_hire_date'], format='%Y-%m-%d')
+profile_df['org_hire_date'].head(20)
+
+parse_profile(profile_df)
+
+df.groupby('complaint_category').sum()
+
+year = df.groupby('org_hire_date').sum()
+
+df['Year_hired'] = df['org_hire_date'].map(lambda d: d.year)
+year = df.groupby('Year_hired').sum()
+year.reset_index(inplace = True)
+
+
+#profile_df['birth_year'] = pd.to_datetime(profile_df['birth_year'], format='%Y')
+
+profile_df.loc[10]
+
+my_fn(df, '03C-SEARCH OF PREMISE/VEHICLE WITHOUT WARRANT', 'complaint_category', 'victim_gender' ,  col3 = 'count')
+
+
+dv_df = df[df['complaint_category'] == '05K-DOMESTIC ALTERCATION/INCIDENT - OFF DUTY']
+
+dv_df.head()
+dv_df.reset_index(inplace=True)
+dv_df.loc[0]
+
+
+
+
+def filter_df(df, col, value):
+    filtered_df = df[df[col] == value]
+    return filtered_df
+
+filter_df(df, 'race', 'HISPANIC')
