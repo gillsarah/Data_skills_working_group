@@ -274,8 +274,14 @@ dv_df.loc[0]
 
 
 
-def filter_df(df, col, value):
-    filtered_df = df[df[col] == value]
-    return filtered_df
+def filter_df(df, col, value, col2, value2):
+    if value == 'all':
+        filtered_df = df
+    else:
+        filtered_df = df[df[col] == value]
+    
+    filtered_df2 = filtered_df[filtered_df[col2]== value2]
+    return filtered_df2
 
-filter_df(df, 'race', 'HISPANIC')
+filter_df(df, 'race', 'HISPANIC', 'gender', 'MALE')
+filter_df(df, 'race', 'all')
