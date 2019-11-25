@@ -5,55 +5,33 @@ import pandas as pd
 
 #this is the path to the chicago-police-data GitHub, 
 #used to access unified_data.zip and discipline_penalty_codes.csv
-data_path = '/Users/Sarah/Documents/GitHub/chicago-police-data/data'
+#data_path = '/Users/Sarah/Documents/GitHub/chicago-police-data/data'
 
 #this is the save-to path, this is where the unified_data.zip unzips to
 #and where we read the accused, investigators and victims data from (out of the unzipped contents)
-path =  '/Users/Sarah/Documents/GitHub/assignment-4-gillsarah'
-path_2 = '/Users/Sarah/Documents/GitHub/assignment-5-sarah-gill-1'
+#path =  '/Users/Sarah/Documents/GitHub/assignment-4-gillsarah'
+path= '/Users/Sarah/Documents/GitHub/assignment-5-sarah-gill-1'
 
-profile_path = 'unified_data/profiles/officer-profiles.csv.gz'
+#profile_path = 'unified_data/profiles/officer-profiles.csv.gz' #path for reading from chicago-police-data
+profile_path = 'fully-unified-data/profiles/officer-profiles.csv.gz'
 codes_path = 'context_data/discipline_penalty_codes.csv'
 base_path = 'fully-unified-data/complaints/complaints-{}_2000-2016_2016-11.csv.gz'
 file_name = ['accused', 'investigators', 'victims']
 
-'''
-#play
-df_sal = pd.read_csv(os.path.join(data_path, 'unified_data/salary/salary-filled_2002-2017_2017-09.csv.gz'))
-df_sal.columns
-df_sal.loc[0]
-
-df_pr = pd.read_csv(os.path.join(data_path, 'unified_data/profiles/officer-profiles.csv.gz'))
-df_pr.loc[0]
-
-df_invest = pd.read_csv(os.path.join(data_path, 'unified_data/complaints/complaints-investigators_2000-2016_2016-11.csv.gz'))
-df_invest.loc[0]
-
-df_acc = pd.read_csv(os.path.join(data_path, 'unified_data/complaints/complaints-accused_2000-2016_2016-11.csv.gz'))
-df_acc.loc[0]
-
-df_acc.shape 
-df_pr.shape
-
-merge= df_invest.merge(df_pr, how = 'left', on = 'UID')
-#looks name matches -at lest for [0]
-
-merge2 = df_acc.merge(df_pr, how = 'left', on = 'UID')
-'''
 
 def pathmaker(base_path, file):
     return base_path.format(file)
 
 
-def unzip(data_path, filename, save_to_path):
-    zf = ZipFile(os.path.join(data_path, filename), 'r')
+def unzip(path, filename, save_to_path):
+    zf = ZipFile(os.path.join(path, filename), 'r')
     zf.extractall(save_to_path)
     zf.close()
     #cite: https://stackoverflow.com/questions/3451111/unzipping-files-in-python
 
 
-def read_df(data_path, filename):
-    df = pd.read_csv(os.path.join(data_path, filename))
+def read_df(path, filename):
+    df = pd.read_csv(os.path.join(path, filename))
     return df
 
 
@@ -156,7 +134,7 @@ def main():
     for f in file_name:
         files.append(pathmaker(base_path, f))
 
-    unzip(data_path, 'unified_data/unified_data.zip', path)
+    #unzip(path, 'unified_data/unified_data.zip', path)
 
     dfs = []
     for filename in files:
@@ -169,9 +147,9 @@ def main():
             dfs.append(parse_victims(df))
         else:
             print('unexpected file')
-    dfs.append(read_df(data_path, codes_path))
+    dfs.append(read_df(path, codes_path))
     
-    df2 = read_df(data_path, profile_path)
+    df2 = read_df(path, profile_path)
     dfs.append(parse_profile(df2))
 
     df = merge_dfs(dfs)
@@ -185,7 +163,7 @@ def main():
 
     #outcome_df = complaint_type_outcomes(dfs[0], 'SU', 'sustained')
 
-    export_df(df, path_2, 'full_df.csv')
+    export_df(df, path, 'full_df.csv')
     #export_df(race_df, path, 'Proportion of compliants sustained by race.csv')
     #export_df(outcome_df, path, 'Most likely to be sustained.csv')
 
@@ -196,6 +174,14 @@ df = main()
 
 #df['count'] = 1 
 
+def read_profile(path, profile_path):
+    profile_df = read_df(path, profile_path)
+    parse_profile(profile_df)
+    profile_df['Year_hired'] = profile_df['org_hire_date'].map(lambda d: d.year)
+    profile_df['count'] = 1
+    return profile_df
+
+profile_df = read_profile(path, profile_path)
 
 
 def small_df_maker(df, col1, col2, col3 = 'count'):
@@ -220,6 +206,7 @@ def small_df_maker(df, col1, col2, col3 = 'count'):
     return df3
 
 
+
 def my_fn(df, officer_string, col1, col2, col3 = 'count'):
     '''
     takes a string value for officer, what you want to groubby
@@ -236,10 +223,12 @@ def my_fn(df, officer_string, col1, col2, col3 = 'count'):
     #breaks df2 into a small df for just 1 race? 
     #plots that subset in a historgram 
 
+
+'''
 my_fn(df, 'WHITE', 'race', 'final_finding')
 
 
-profile_df = read_df(data_path, profile_path)
+profile_df = read_df(path, profile_path)
 profile_df.columns
 profile_df.head()
 
@@ -271,10 +260,10 @@ dv_df.head()
 dv_df.reset_index(inplace=True)
 dv_df.loc[0]
 
+'''
 
 
-
-def filter_df(df, col1, col2, value1 = 'all', value2= 'all'):
+def filter_df(df, col1, col2= 'gender', value1 = 'all', value2= 'all'):
     if value1 == 'all':
         filtered_df = df
     else:
@@ -287,5 +276,6 @@ def filter_df(df, col1, col2, value1 = 'all', value2= 'all'):
     return filtered_df2
 
 
-filter_df(df, 'race', 'gender','HISPANIC',  'MALE')
+#filter_df(df, 'race', 'gender','HISPANIC',  'MALE')
 #filter_df(df, 'race', 'all')
+#filter_df(df, 'final_finding', value1='SU')
