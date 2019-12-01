@@ -30,62 +30,40 @@ def merge_dfs(df1, df2, merge_how, merge_on, suffix_left='_x', suffix_right='_y'
  
     return merge_df
 
-
 race = list(stu_df['race'].unique())
-df = filter_df(stu_df, 'sex', 'Total')
-df2 = filter_df(df, 'year', 2016)
 
-df_wh = filter_df(df2, 'race', 'White')
-test = df_wh.groupby('unitid').sum()
-df_tot = filter_df(df2, 'race', 'Total')
-df_tot2 = df_tot.groupby('unitid').sum()
+#this is a very janky solution. There has got to be a better way to make percent_white colum
+#however I could not get this to work another way and preserve unitid
+def parse_df_for_scatter(stu_df, inst_df, race, sex = 'Total', year = 2016):
+    df = filter_df(stu_df, 'sex', sex)
+    df2 = filter_df(df, 'year', year)
 
-test2 = merge_dfs(test, df2, merge_how= 'inner', merge_on = 'unitid', 
-                  suffix_left = '_white', suffix_right = '')
-test3 = merge_dfs(test2, df_tot2, merge_how= 'inner', merge_on = 'unitid',
-                 suffix_left = '', suffix_right = '_Total')
+    df_race = filter_df(df2, 'race', race)
+    test = df_race.groupby('unitid').sum() #sum over graduite and undergrduite students
+    df_tot = filter_df(df2, 'race', 'Total')
+    df_tot2 = df_tot.groupby('unitid').sum() #sum over graduite and undergrduite students
 
-test3['percent_white'] = (test3['headcount_white']/test3['headcount_Total'])*100
+    test2 = merge_dfs(test, df2, merge_how= 'inner', merge_on = 'unitid', 
+                    suffix_left = '_'+race, suffix_right = '')
+    test3 = merge_dfs(test2, df_tot2, merge_how= 'inner', merge_on = 'unitid',
+                    suffix_left = '', suffix_right = '_Total')
 
-test3=test3.groupby('unitid').mean()
+    test3['percent_'+race] = (test3['headcount_'+race]/test3['headcount_Total'])*100
 
-df4 = filter_df(inst_df, 'year', 2016)
-m_df = merge_dfs(test3, df4, merge_how= 'inner', merge_on = 'unitid')
-m_df.shape
+    test4=test3.groupby('unitid').mean()
 
-m_df['admission_rate'] = m_df['number_admitted']/m_df['number_applied'] 
+    df4 = filter_df(inst_df, 'year', year)
+    m_df = merge_dfs(test4, df4, merge_how= 'inner', merge_on = 'unitid')
+    #m_df.shape
 
-m_df['percent_white'].max()
-test3['headcount_white'].max()
-#df2.set_index(['unitid'], inplace = True)
-#df3 = df2.pivot(columns = 'race', values = 'headcount')
+    m_df['admission_rate'] = m_df['number_admitted']/m_df['number_applied']
 
-#for col in race:
-#    df3['percent_'+ col] = (df3[col]/df3['Total']) * 100
+    return m_df 
 
 
+m_df = parse_df_for_scatter(stu_df, inst_df, race= 'White')
 
-#df2 = filter_df(df, 'race', 'percent_White')
-#df3 = filter_df(df2, 'year', 2016)
-
-#df4 = filter_df(inst_df, 'year', 2016)
-
-
-
-
-df4['year'].unique()
-df3['year'].unique()
-
-inst_df['year'].dtype
-
-df3 = df3.groupby('unitid').sum()
-
-m_df = merge_dfs(df3, df4, merge_how= 'inner', merge_on = 'unitid')
-m_df.shape
-
-test = filter_df(m_df, 'unitid', 142832)
-
-def death_green_SES_plot(df, x, y, xlabel, ylabel):
+def scatter_plot_annotated(df, x, y, xlabel, ylabel, title, sub_title):
     #x = 'headcount'
     z = df['inst_name']
     #a_list = df['Per_Capita_Income']/1000
@@ -112,18 +90,21 @@ def death_green_SES_plot(df, x, y, xlabel, ylabel):
     #remove spines
     ax.spines['right'].set_visible(False) 
     ax.spines['top'].set_visible(False)
-    plt.title('2016: The Most Selective Universities Are Also Relatively Diverse')
+    plt.suptitle(title)
+    plt.title(sub_title)
+    
     # Make a legend for per-capita income
     #for a_list in [10, 20, 30]:
     #    plt.scatter([], [], c='k', alpha=0.3, s=a_list,
     #                label=str(a_list) + 'k')
     #plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Per-Capita Income')
     #cite https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
-    #plt.savefig('SES_Green_and_Deaths_by_' +y)
+    plt.savefig(os.path.join(path, 'scatterplot'))
     #plt.close()
     plt.show()
 
-death_green_SES_plot(m_df, 'admission_rate', 'percent_white', 'Admission Rate','Percent White')
+scatter_plot_annotated(m_df, 'admission_rate', 'percent_white', 'Admission Rate','Percent White',
+                        'IL Universities in 2016:', 'Student Body in The Most Selective Universities is Less Ratially Homogonous')
 
-m_df.head()
+
 
