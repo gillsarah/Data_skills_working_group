@@ -60,6 +60,7 @@ def parse_victims(victims_df):
 def parse_profile(profile_df):
     profile_df['org_hire_date'] = pd.to_datetime(profile_df['org_hire_date'], format='%Y-%m-%d')
     #profile_df['birth_year'] = pd.to_datetime(profile_df['birth_year'], format='%Y')
+    profile_df['Year_hired'] = profile_df['org_hire_date'].map(lambda d: d.year)
     return profile_df
 
 def merge_dfs(dfs):
